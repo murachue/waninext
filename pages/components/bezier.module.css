@@ -15,7 +15,7 @@
     /* overflow: visible !important; */
 }
 
-path {
+path.default {
     stroke-width: 1.5px;
     fill: none;
     stroke: #999;

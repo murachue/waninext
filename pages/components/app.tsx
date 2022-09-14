@@ -1,7 +1,5 @@
-import { h } from 'preact';
-import { useCallback, useState } from 'preact/hooks';
-import { useMemo } from 'react';
-import style from "./app.css";
+import { CSSProperties, useCallback, useMemo, useState } from "react";
+import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import Node from './node';
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
@@ -14,7 +12,7 @@ const App = () => {
             class: style.blueLine
         }
     });
-    const [draggingStyle, setDraggingStyle] = useState<Partial<Pick<HTMLElement["style"], "left" | "top" | "display" | "position">>>({
+    const [draggingStyle, setDraggingStyle] = useState<Partial<Pick<CSSProperties, "left" | "top" | "display" | "position">>>({
         position: "absolute",
         display: "none",
     });
@@ -120,18 +118,18 @@ const App = () => {
     return <div id="app">
         <Bezier settings={Object.values(links)}>
             <Node inputs={["ai1"]} outputs={["ao1", "ao2", "ao3", "ao4"]} x="30px" y="30px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div class={style.nodecontainer}>
-                    <div class={style.node}>drag me 1</div>
+                <div className={style.nodecontainer}>
+                    <div className={style.node}>drag me 1</div>
                 </div>
             </Node>
             <Node inputs={["bi1"]} outputs={[]} x="180px" y="30px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div class={style.nodecontainer}>
-                    <div class={style.node}>drag me 2</div>
+                <div className={style.nodecontainer}>
+                    <div className={style.node}>drag me 2</div>
                 </div>
             </Node>
             <Node inputs={["ci1", "ci2"]} outputs={["co1", "co2"]} x="80px" y="150px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div class={style.nodecontainer}>
-                    <div class={style.node}>drag me 3</div>
+                <div className={style.nodecontainer}>
+                    <div className={style.node}>drag me 3</div>
                 </div>
             </Node>
             <div id={previewid} style={draggingStyle} />

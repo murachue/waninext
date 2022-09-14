@@ -1,6 +1,5 @@
-import { FunctionalComponent, h } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import style from "./bezier.css";
+import { FunctionComponent, PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
+import style from "./bezier.module.css";
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
@@ -88,7 +87,7 @@ const getLine = (setting: Setting, container: HTMLElement | null) => {
 
 type Line = ReturnType<typeof getLine>;
 
-export const Bezier: FunctionalComponent<{ settings: Setting[]; }> = ({ settings, children }) => {
+export const Bezier: FunctionComponent<PropsWithChildren<{ settings: Setting[]; }>> = ({ settings, children }) => {
     const container = useRef<HTMLDivElement>(null);
     // Be Object to be fast partial updatable array.
     const [lines, setLines] = useState<Record<string, Line>>({});
@@ -157,10 +156,10 @@ export const Bezier: FunctionalComponent<{ settings: Setting[]; }> = ({ settings
     });
 
     return (
-        <div ref={container} class={style.container}>
-            <svg class={style.bezierLine}>
+        <div ref={container} className={style.container}>
+            <svg className={style.bezierLine}>
                 {Object.entries(lines).map(([id, line]) =>
-                    <path key={id} class={line.class} d={
+                    <path key={id} className={line.class} d={
                         `M${line.cord0.x} ${line.cord0.y}` +
                         `C${line.cord1.x} ${line.cord1.y}` +
                         `,${line.cord2.x} ${line.cord2.y}` +

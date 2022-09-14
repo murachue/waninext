@@ -1,6 +1,5 @@
-import { FunctionComponent, h } from "preact";
-import { StateUpdater, useCallback, useMemo, useRef } from "preact/hooks";
-import style from "./plug.css";
+import { Dispatch, FunctionComponent, MouseEvent as RMouseEvent, SetStateAction, useCallback, useMemo, useRef } from "react";
+import style from "./plug.module.css";
 
 export type Linking = {
     from: string;
@@ -29,7 +28,7 @@ export const defaultPlugState = () => ({ ...defaultState });
 const Plug: FunctionComponent<{
     id?: string;
     handlers: Partial<PlugHandlers>;
-    stateTuple: [PlugState, StateUpdater<PlugState>]; // XXX: how to using typeof useState without undefined?
+    stateTuple: [PlugState, Dispatch<SetStateAction<PlugState>>]; // XXX: how to using typeof useState without undefined?
 }> = ({ id, handlers: partialHandlers, stateTuple: [state, setState] }) => {
     // this should be useState but native DOM event handler must break closure (which is counterpart of pure immutable)...
     const ctxref = useRef<PlugState>(state); // poor default value...
@@ -46,7 +45,7 @@ const Plug: FunctionComponent<{
     const hdlrref = useRef<PlugHandlers>(handlers); // poor default value...
     hdlrref.current = handlers; // every component update updates current.
 
-    const onMouseDown = useCallback((e: MouseEvent) => {
+    const onMouseDown = useCallback((e: RMouseEvent) => {
         const context = { ...state };
         do {
             context.from = (e.currentTarget as HTMLElement).id || null; // or just props.id
@@ -83,7 +82,7 @@ const Plug: FunctionComponent<{
         setState(context);
         e.stopPropagation();
     }, [state, setState, handlers]);
-    const onMouseEnter = useCallback((e: Event) => {
+    const onMouseEnter = useCallback((e: RMouseEvent) => {
         const context = { ...state };
         do {
             if (!context.from) {
@@ -97,7 +96,7 @@ const Plug: FunctionComponent<{
         } while (false);
         e.stopPropagation();
     }, [state, setState, handlers]);
-    const onMouseLeave = useCallback((e: Event) => {
+    const onMouseLeave = useCallback((e: RMouseEvent) => {
         const context = { ...state };
         do {
             if (!context.from) {
@@ -112,10 +111,10 @@ const Plug: FunctionComponent<{
         e.stopPropagation();
     }, [state, setState, handlers]);
 
-    return <div class={style.plugcontainer}>
+    return <div className={style.plugcontainer}>
         <div
             id={id}
-            class={style.plugbox}
+            className={style.plugbox}
             onMouseDown={onMouseDown}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave} />

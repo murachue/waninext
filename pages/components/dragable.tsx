@@ -1,10 +1,8 @@
-import { cloneElement, Fragment, FunctionComponent, h, isValidElement, VNode } from 'preact';
-import { Children } from 'preact/compat';
-import { useCallback, useState } from 'preact/hooks';
+import { Children, cloneElement, FunctionComponent, isValidElement, MouseEvent as RMouseEvent, PropsWithChildren, useCallback, useState } from "react";
 
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
-const Draggable: FunctionComponent = ({ children }) => {
+const Draggable: FunctionComponent<PropsWithChildren<{}>> = ({ children }) => {
     const [style, setStyle] = useState<{ left?: string, top?: string, position: string, userSelect: string; }>({
         // left: "0px",
         // top: "0px",
@@ -12,7 +10,7 @@ const Draggable: FunctionComponent = ({ children }) => {
         userSelect: "none",  // don't select text on dragging!
     });
 
-    const onMouseDown = useCallback((e: MouseEvent) => {
+    const onMouseDown = useCallback((e: RMouseEvent) => {
         const target: HTMLElement = e.currentTarget! as HTMLElement;
         const posT = target.getBoundingClientRect();
         const posP = target.parentElement!.getBoundingClientRect();
@@ -39,13 +37,13 @@ const Draggable: FunctionComponent = ({ children }) => {
         document.addEventListener("mouseup", onmouseup);
 
         e.stopPropagation();
-    }, [children, style]);
+    }, [style]);
 
     const child = Children.only(children);
     return <>
-        {!isValidElement(child) ? child : cloneElement(child, {
+        {!isValidElement(child) ? child : cloneElement(child as any/* FIXME */, {
             onMouseDown,
-            style: { ...(child as VNode<{ style?: object; /* how about string? */ }>).props?.style, ...style },
+            style: { ...child.props?.style, ...style },
         })}
     </>;
 };
