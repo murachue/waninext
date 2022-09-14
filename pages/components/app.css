@@ -1,0 +1,27 @@
+.nodecontainer {
+    margin: auto;
+}
+
+.node {
+    width: 80px;
+    height: 80px;
+    background: #ccce;
+}
+
+path.blueLine {
+    stroke-width: 2px;
+    fill: none;
+    stroke: rgb(0, 119, 187);
+}
+
+.blueLine.dash {
+    stroke-dasharray: 4;
+}
+
+/* #app {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+} */

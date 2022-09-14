@@ -1,0 +1,25 @@
+.dragger {
+    position: absolute;
+    cursor: move;
+    display: flex;
+    align-items: stretch;
+}
+
+.plugs {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+
+    --plug-width: 15px;
+    --plug-spacing: 2px;
+}
+
+.inputside {
+    margin-left: calc(-1 * (var(--plug-spacing) + var(--plug-width)));
+    margin-right: var(--plug-spacing);
+}
+
+.outputside {
+    margin-left: var(--plug-spacing);
+    margin-right: calc(-1 * (var(--plug-spacing) + var(--plug-width)));
+}
