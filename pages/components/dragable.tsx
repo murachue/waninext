@@ -1,14 +1,19 @@
-import { Children, cloneElement, FunctionComponent, isValidElement, MouseEvent as RMouseEvent, PropsWithChildren, useCallback, useState } from "react";
+import { Children, cloneElement, FunctionComponent, isValidElement, MouseEvent as RMouseEvent, PropsWithChildren, useCallback, useRef, useState } from "react";
 
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
-const Draggable: FunctionComponent<PropsWithChildren<{}>> = ({ children }) => {
+const Draggable: FunctionComponent<PropsWithChildren<{
+    dragstart?: (e: HTMLElement, x: number, y: number) => void;
+    dragend?: (e: HTMLElement, x: number, y: number) => void;
+}>> = ({ dragstart, dragend, children }) => {
     const [style, setStyle] = useState<{ left?: string, top?: string, position: string, userSelect: string; }>({
         // left: "0px",
         // top: "0px",
         position: "absolute",
         userSelect: "none",  // don't select text on dragging!
     });
+    const dragendref = useRef(dragend); // poor initval...
+    dragendref.current = dragend;
 
     const onMouseDown = useCallback((e: RMouseEvent) => {
         const target: HTMLElement = e.currentTarget! as HTMLElement;
@@ -28,16 +33,20 @@ const Draggable: FunctionComponent<PropsWithChildren<{}>> = ({ children }) => {
             });
         };
 
-        const onmouseup = () => {
+        const onmouseup = (e: MouseEvent) => {
             document.removeEventListener("mousemove", onmousemove);
             document.removeEventListener("mouseup", onmouseup);
+
+            dragendref.current && dragendref.current(e.currentTarget! as HTMLElement, e.clientX, e.clientY);
         };
 
         document.addEventListener("mousemove", onmousemove);
         document.addEventListener("mouseup", onmouseup);
 
+        dragstart && dragstart(target, e.clientX, e.clientY);
+
         e.stopPropagation();
-    }, [style]);
+    }, [dragstart, dragendref, style]);
 
     const child = Children.only(children);
     return <>

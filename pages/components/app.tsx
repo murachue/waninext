@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useMemo, useState } from "react";
+import { CSSProperties, useCallback, useEffect, useMemo, useState } from "react";
 import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import Node from './node';
@@ -137,6 +137,11 @@ const App = () => {
         linkpreview,
         unlinkpreview,
     }), [dragstart, dragmove, dragend, linkpreview, unlinkpreview]);
+
+    useEffect(() => {
+        const context = new AudioContext({ sampleRate: 44010 });
+        return () => { context.close(); };
+    }, []);
 
     return <div id="app">
         <Bezier settings={links.valuesarr()}>
