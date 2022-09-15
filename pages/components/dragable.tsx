@@ -1,11 +1,12 @@
-import { Children, cloneElement, FunctionComponent, isValidElement, MouseEvent as RMouseEvent, PropsWithChildren, useCallback, useRef, useState } from "react";
+import { Children, cloneElement, Dispatch, FunctionComponent, isValidElement, MouseEvent as RMouseEvent, PropsWithChildren, SetStateAction, useCallback, useRef, useState } from "react";
 
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
 const Draggable: FunctionComponent<PropsWithChildren<{
+    dontcramp?: boolean;
     dragstart?: (e: HTMLElement, x: number, y: number) => void;
-    dragend?: (e: HTMLElement, x: number, y: number) => void;
-}>> = ({ dragstart, dragend, children }) => {
+    dragend?: (e: HTMLElement, x: number, y: number, setStyle: Dispatch<SetStateAction<any>>) => void;
+}>> = ({ dontcramp, dragstart, dragend, children }) => {
     const [style, setStyle] = useState<{ left?: string, top?: string, position: string, userSelect: string; }>({
         // left: "0px",
         // top: "0px",
@@ -23,8 +24,10 @@ const Draggable: FunctionComponent<PropsWithChildren<{
         const shiftY = e.clientY - posT.y;  // ditto
 
         const onmousemove = (e: MouseEvent) => {
-            const x = clamp(Math.round(e.clientX - shiftX - posP.x), 0, posP.width - posT.width);
-            const y = clamp(Math.round(e.clientY - shiftY - posP.y), 0, posP.height - posT.height);
+            const rawx = Math.round(e.clientX - shiftX - posP.x);
+            const rawy = Math.round(e.clientY - shiftY - posP.y);
+            const x = dontcramp ? rawx : clamp(rawx, 0, posP.width - posT.width);
+            const y = dontcramp ? rawy : clamp(rawy, 0, posP.height - posT.height);
 
             setStyle({
                 ...style,
@@ -37,7 +40,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
             document.removeEventListener("mousemove", onmousemove);
             document.removeEventListener("mouseup", onmouseup);
 
-            dragendref.current && dragendref.current(e.currentTarget! as HTMLElement, e.clientX, e.clientY);
+            dragendref.current && dragendref.current(e.currentTarget! as HTMLElement, e.clientX, e.clientY, setStyle);
         };
 
         document.addEventListener("mousemove", onmousemove);
@@ -46,7 +49,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
         dragstart && dragstart(target, e.clientX, e.clientY);
 
         e.stopPropagation();
-    }, [dragstart, dragendref, style]);
+    }, [dragstart, dragendref, dontcramp, style]);
 
     const child = Children.only(children);
     return <>

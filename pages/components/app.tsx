@@ -1,6 +1,7 @@
 import { CSSProperties, useCallback, useEffect, useMemo, useState } from "react";
 import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
+import Draggable from "./dragable";
 import Node from './node';
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
 
@@ -144,6 +145,15 @@ const App = () => {
     }, []);
 
     return <div id="app">
+        <div style={{ position: "absolute", left: 0, top: 0, width: "100%", border: "1px solid #ccc", overflow: "visible" }}>
+            <div className={style.nodetemplate}>
+                <Draggable dontcramp dragend={(e, x, y, setStyle) => { setStyle((style: any) => ({ ...style, left: "0", top: "0" })); }}>
+                    <div className={style.nodecontainer}>
+                        <div className={style.node}>output</div>
+                    </div>
+                </Draggable>
+            </div>
+        </div>
         <Bezier settings={links.valuesarr()}>
             <Node inputs={["ai1"]} outputs={["ao1", "ao2", "ao3", "ao4"]} x="30px" y="30px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
                 <div className={style.nodecontainer}>
@@ -162,7 +172,7 @@ const App = () => {
             </Node>
             <div id={previewid} style={draggingStyle} />
         </Bezier>
-    </div>;
+    </div >;
 };
 
 export default App;

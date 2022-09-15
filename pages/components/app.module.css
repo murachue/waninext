@@ -8,6 +8,13 @@
     background: #ccce;
 }
 
+.nodetemplate {
+    width: 80px;
+    height: 80px;
+    margin: 20px;
+    position: relative;
+}
+
 path.blueLine {
     stroke-width: 2px;
     fill: none;
