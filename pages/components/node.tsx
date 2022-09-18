@@ -1,17 +1,14 @@
-import { Dispatch, FunctionComponent, PropsWithChildren, SetStateAction } from "react";
-import Draggable from "./dragable";
+import { FunctionComponent, PropsWithChildren } from "react";
 import style from "./node.module.css";
-import Plug, { PlugHandlers, PlugState } from "./plug";
+import Plug from "./plug";
 
 const Node: FunctionComponent<PropsWithChildren<{
     inputs: (string | null | undefined)[];
     outputs: (string | null | undefined)[];
-    x: string;
-    y: string;
-    plugHandlers: PlugHandlers;
-    plugStateTuple: [PlugState, Dispatch<SetStateAction<PlugState>>];
-}>> = ({ inputs, outputs, x, y, plugHandlers, plugStateTuple, children }) => {
-    return <Draggable><div className={style.dragger} style={{ left: x, top: y }}>
+    plugHandlers: Parameters<typeof Plug>[0]["handlers"];
+    plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
+}>> = ({ inputs, outputs, plugHandlers, plugStateTuple, children }) => {
+    return <div className={style.outer}>
         <div className={`${style.plugs} ${style.inputside}`}>
             {inputs.map((id, i) => <Plug key={id || i} id={id || undefined} handlers={plugHandlers} stateTuple={plugStateTuple} />)}
         </div>
@@ -19,7 +16,7 @@ const Node: FunctionComponent<PropsWithChildren<{
         <div className={`${style.plugs} ${style.outputside}`}>
             {outputs.map((id, i) => <Plug key={id || i} id={id || undefined} handlers={plugHandlers} stateTuple={plugStateTuple} />)}
         </div>
-    </div></Draggable>;
+    </div>;
 };
 
 export default Node;

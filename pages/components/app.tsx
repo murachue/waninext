@@ -148,28 +148,42 @@ const App = () => {
         <div style={{ position: "absolute", left: 0, top: 0, width: "100%", border: "1px solid #ccc", overflow: "visible" }}>
             <div className={style.nodetemplate}>
                 <Draggable dontcramp dragend={(e, x, y, setStyle) => { setStyle((style: any) => ({ ...style, left: "0", top: "0" })); }}>
-                    <div className={style.nodecontainer}>
-                        <div className={style.node}>output</div>
-                    </div>
+                    <Node inputs={[null]} outputs={[]} plugHandlers={{ dragstart: () => "" }} plugStateTuple={plugStateTuple}>
+                        <div className={style.nodecontainer}>
+                            <div className={style.node}>output</div>
+                        </div>
+                    </Node>
                 </Draggable>
             </div>
         </div>
         <Bezier settings={links.valuesarr()}>
-            <Node inputs={["ai1"]} outputs={["ao1", "ao2", "ao3", "ao4"]} x="30px" y="30px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div className={style.nodecontainer}>
-                    <div className={style.node}>drag me 1</div>
+            <Draggable>
+                <div style={{ position: "absolute", left: "30px", top: "130px" }}>
+                    <Node inputs={["ai1"]} outputs={["ao1", "ao2", "ao3", "ao4"]} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
+                        <div className={style.nodecontainer}>
+                            <div className={style.node}>drag me 1</div>
+                        </div>
+                    </Node>
+                    </div>
+                </Draggable>
+            <Draggable>
+                <div style={{ position: "absolute", left: "180px", top: "130px" }}>
+                    <Node inputs={["bi1"]} outputs={[]} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
+                        <div className={style.nodecontainer}>
+                            <div className={style.node}>drag me 2</div>
+                        </div>
+                    </Node>
                 </div>
-            </Node>
-            <Node inputs={["bi1"]} outputs={[]} x="180px" y="30px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div className={style.nodecontainer}>
-                    <div className={style.node}>drag me 2</div>
+            </Draggable>
+            <Draggable>
+                <div style={{ position: "absolute", left: "80px", top: "250px" }}>
+                    <Node inputs={["ci1", "ci2"]} outputs={["co1", "co2"]} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
+                        <div className={style.nodecontainer}>
+                            <div className={style.node}>drag me 3</div>
+                        </div>
+                    </Node>
                 </div>
-            </Node>
-            <Node inputs={["ci1", "ci2"]} outputs={["co1", "co2"]} x="80px" y="150px" plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div className={style.nodecontainer}>
-                    <div className={style.node}>drag me 3</div>
-                </div>
-            </Node>
+            </Draggable>
             <div id={previewid} style={draggingStyle} />
         </Bezier>
     </div >;

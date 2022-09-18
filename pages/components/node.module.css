@@ -1,6 +1,4 @@
-.dragger {
-    position: absolute;
-    cursor: move;
+.outer {
     display: flex;
     align-items: stretch;
 }
