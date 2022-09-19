@@ -13,14 +13,14 @@ const TmplNode: FunctionComponent<PropsWithChildren<{
     const dummyPlug = useState<PlugState>(defaultPlugState());
     const [{ isDragging }, dragref, preview] = useDrag({
         type: "TmplNode",
-        options: { dropEffect: "move" },
+        // options: { dropEffect: "copy" },  // if we specify options, draggable become false and never returned to true... react-dnd@16
         item: { inputs, outputs, plugHandlers: { dragstart: () => "" }, plugStateTuple: dummyPlug, children },
         collect: monitor => ({
             isDragging: !!monitor.isDragging(),
         }),
     });
     useEffect(() => {
-        // preview(getEmptyImage(), { captureDraggingState: true }); // TODO: how if touch backend?
+        preview(getEmptyImage(), { captureDraggingState: true }); // TODO: how if touch backend?
     }, [preview]);
 
     return <div className={style.marginer}>
