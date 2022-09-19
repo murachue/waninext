@@ -42,6 +42,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["react", "npm:18.2.0"],\
             ["react-dnd", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:16.0.1"],\
             ["react-dnd-html5-backend", "npm:16.0.1"],\
+            ["react-dnd-touch-backend", "npm:16.0.1"],\
             ["react-dom", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:18.2.0"],\
             ["typescript", "patch:typescript@npm%3A4.8.3#~builtin<compat/typescript>::version=4.8.3&hash=a1c5e5"]\
           ],\
@@ -2486,6 +2487,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["react-dnd-touch-backend", [\
+        ["npm:16.0.1", {\
+          "packageLocation": "./.yarn/cache/react-dnd-touch-backend-npm-16.0.1-2b96ba84be-5362c5f426.zip/node_modules/react-dnd-touch-backend/",\
+          "packageDependencies": [\
+            ["react-dnd-touch-backend", "npm:16.0.1"],\
+            ["@react-dnd/invariant", "npm:4.0.2"],\
+            ["dnd-core", "npm:16.0.1"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["react-dom", [\
         ["npm:18.2.0", {\
           "packageLocation": "./.yarn/cache/react-dom-npm-18.2.0-dd675bca1c-7d323310be.zip/node_modules/react-dom/",\
@@ -2971,6 +2983,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["react", "npm:18.2.0"],\
             ["react-dnd", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:16.0.1"],\
             ["react-dnd-html5-backend", "npm:16.0.1"],\
+            ["react-dnd-touch-backend", "npm:16.0.1"],\
             ["react-dom", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:18.2.0"],\
             ["typescript", "patch:typescript@npm%3A4.8.3#~builtin<compat/typescript>::version=4.8.3&hash=a1c5e5"]\
           ],\

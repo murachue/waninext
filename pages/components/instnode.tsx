@@ -1,0 +1,50 @@
+// instantiated node
+import { FunctionComponent, PropsWithChildren, useEffect } from "react";
+import { useDrag } from "react-dnd";
+import { getEmptyImage } from "react-dnd-html5-backend";
+import Draggable from "./dragable";
+import Node from "./node";
+import Plug from "./plug";
+
+const InstNode: FunctionComponent<PropsWithChildren<{
+    inputs: (string | null | undefined)[];
+    outputs: (string | null | undefined)[];
+    plugHandlers: Parameters<typeof Plug>[0]["handlers"];
+    plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
+    x: number;
+    y: number;
+}>> = ({ inputs, outputs, plugHandlers, plugStateTuple, x, y, children }) => {
+    // const [{ isDragging, offset }, dragref, preview] = useDrag({
+    //     type: "InstNode",
+    //     options: { dropEffect: "move" },
+    //     item: { inputs, outputs, plugHandlers, plugStateTuple, children },
+    //     collect: monitor => ({
+    //         isDragging: !!monitor.isDragging(),
+    //         offset: monitor.getDifferenceFromInitialOffset(),
+    //     }),
+    // });
+    // useEffect(() => {
+    //     // preview(getEmptyImage(), { captureDraggingState: true }); // TODO: how if touch backend?
+    // }, [preview]);
+    // // useEffect(() => { console.log(offset); }, [offset]);
+
+    // return <div ref={dragref} style={{
+    //     opacity: isDragging ? 0.5 : 1,
+    //     position: "absolute",
+    //     transform: `translate(${x + (offset?.x || 0)}px, ${y + (offset?.y || 0)}px)`,
+    // }}>
+    //     <Node inputs={inputs} outputs={outputs} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
+    //         {children}
+    //     </Node>
+    // </div>;
+
+    return <Draggable>
+        <div style={{ left: x, top: y }}>
+            <Node inputs={inputs} outputs={outputs} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
+                {children}
+            </Node>
+        </div>
+    </Draggable>;
+};
+
+export default InstNode;
