@@ -17,10 +17,25 @@ const App = () => {
     return <div id="app">
         <DndProvider backend={HTML5Backend}>
             <Desk />
-            <div style={{ position: "absolute", left: 0, top: 0, width: "100%", border: "1px solid #ccc", background: "#444c", overflow: "visible" }}>
+            <div style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: "100%",
+                border: "1px solid #ccc",
+                background: "#444c",
+                overflow: "visible",
+                display: "flex",
+                flexDirection: "row",
+            }}>
                 <TmplNode inputs={[null]} outputs={[]}>
                     <div className={style.nodecontainer}>
                         <div className={style.node}>output</div>
+                    </div>
+                </TmplNode>
+                <TmplNode inputs={[]} outputs={[null]}>
+                    <div className={style.nodecontainer}>
+                        <div className={style.node}>osc</div>
                     </div>
                 </TmplNode>
             </div>
