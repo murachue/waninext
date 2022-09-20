@@ -4,12 +4,13 @@
 }
 
 .plugs {
+    --plug-width: 15px;
+    --plug-spacing: 2px;
+
     display: flex;
     justify-content: center;
     flex-direction: column;
-
-    --plug-width: 15px;
-    --plug-spacing: 2px;
+    width: var(--plug-width);
 }
 
 .inputside {

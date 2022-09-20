@@ -24,7 +24,7 @@ const App = () => {
                     </div>
                 </TmplNode>
             </div>
-            {/* <DraggingPreview /> */}
+            <DraggingPreview />
         </DndProvider>
     </div >;
 };
