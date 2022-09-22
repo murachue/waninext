@@ -8,6 +8,10 @@
     background: #ccce;
 }
 
+.tmplmarginer {
+    margin: 20px;
+}
+
 path.blueLine {
     stroke-width: 2px;
     fill: none;

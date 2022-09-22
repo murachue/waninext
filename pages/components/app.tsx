@@ -28,16 +28,20 @@ const App = () => {
                 display: "flex",
                 flexDirection: "row",
             }}>
-                <TmplNode inputs={[null]} outputs={[]}>
-                    <div className={style.nodecontainer}>
-                        <div className={style.node}>output</div>
-                    </div>
-                </TmplNode>
-                <TmplNode inputs={[]} outputs={[null]}>
-                    <div className={style.nodecontainer}>
-                        <div className={style.node}>osc</div>
-                    </div>
-                </TmplNode>
+                <div className={style.tmplmarginer}>
+                    <TmplNode inputs={[null]} outputs={[]}>
+                        <div className={style.nodecontainer}>
+                            <div className={style.node}>output</div>
+                        </div>
+                    </TmplNode>
+                </div>
+                <div className={style.tmplmarginer}>
+                    <TmplNode inputs={[]} outputs={[null]}>
+                        <div className={style.nodecontainer}>
+                            <div className={style.node}>osc</div>
+                        </div>
+                    </TmplNode>
+                </div>
             </div>
             <DraggingPreview />
         </DndProvider>

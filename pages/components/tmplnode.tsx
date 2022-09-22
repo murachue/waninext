@@ -4,7 +4,6 @@ import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import Node from "./node";
 import { defaultPlugState, PlugState } from "./plug";
-import style from "./tmplnode.module.css";
 
 const TmplNode: FunctionComponent<PropsWithChildren<{
     inputs: (string | null | undefined)[];
@@ -23,12 +22,10 @@ const TmplNode: FunctionComponent<PropsWithChildren<{
         preview(getEmptyImage(), { captureDraggingState: true }); // TODO: how if touch backend?
     }, [preview]);
 
-    return <div className={style.marginer}>
-        <div ref={dragref} style={{ opacity: isDragging ? 0.8 : 1 }}>
-            <Node inputs={inputs} outputs={outputs} plugHandlers={{ dragstart: () => "" }} plugStateTuple={dummyPlug}>
-                {children}
-            </Node>
-        </div>
+    return <div ref={dragref} style={{ opacity: isDragging ? 0.8 : 1 }}>
+        <Node inputs={inputs} outputs={outputs} plugHandlers={{ dragstart: () => "" }} plugStateTuple={dummyPlug}>
+            {children}
+        </Node>
     </div>;
 };
 
