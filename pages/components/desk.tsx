@@ -1,11 +1,9 @@
-import { CSSProperties, useCallback, useEffect, useMemo, useState } from "react";
-import { DndProvider, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { CSSProperties, useCallback, useMemo, useState } from "react";
+import { useDrop } from "react-dnd";
 import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import InstNode from "./instnode";
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
-import TmplNode from "./tmplnode";
 
 class MapEx<K, V> extends Map<K, V> {
     entriesarr() {

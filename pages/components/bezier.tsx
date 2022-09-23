@@ -153,7 +153,7 @@ export const Bezier: FunctionComponent<PropsWithChildren<{ settings: Setting[]; 
         return () => {
             observer.disconnect();
         };
-    });
+    }, [id2settings, lines, updateLinesObj]);
 
     return (
         <div ref={container} className={style.container}>

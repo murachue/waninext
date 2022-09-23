@@ -8,9 +8,10 @@ import { defaultPlugState, PlugState } from "./plug";
 const TmplNode: FunctionComponent<PropsWithChildren<{
     inputs: (string | null | undefined)[];
     outputs: (string | null | undefined)[];
-}>> = ({ inputs, outputs, children }) => {
+    preview?: boolean;
+}>> = ({ inputs, outputs, children, preview }) => {
     const dummyPlug = useState<PlugState>(defaultPlugState());
-    const [{ isDragging }, dragref, preview] = useDrag({
+    const [{ isDragging }, dragref, dragpreview] = useDrag({
         type: "TmplNode",
         // options: { dropEffect: "copy" },  // if we specify options, draggable become false and never returned to true... react-dnd@16
         item: { inputs, outputs, plugHandlers: { dragstart: () => "" }, plugStateTuple: dummyPlug, children },
@@ -19,12 +20,14 @@ const TmplNode: FunctionComponent<PropsWithChildren<{
         }),
     });
     useEffect(() => {
-        preview(getEmptyImage(), { captureDraggingState: true }); // TODO: how if touch backend?
-    }, [preview]);
+        dragpreview(getEmptyImage(), { captureDraggingState: true }); // TODO: how if touch backend?
+    }, [dragpreview]);
 
-    return <div ref={dragref} style={{ opacity: isDragging ? 0.8 : 1 }}>
+    return <div ref={dragref} style={{ opacity: isDragging ? 0.5 : 1 }}>
         <Node inputs={inputs} outputs={outputs} plugHandlers={{ dragstart: () => "" }} plugStateTuple={dummyPlug}>
-            {children}
+            <div style={preview ? { boxShadow: "0 5px 5px black" } : {}}>
+                {children}
+            </div>
         </Node>
     </div>;
 };

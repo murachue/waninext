@@ -12,7 +12,12 @@ const App = () => {
 
     useEffect(() => {
         setWidth(window.innerWidth);
+        const onResize = (e: Event) => setWidth(window.innerWidth);
+        window.addEventListener("resize", onResize);
+        return () => window.removeEventListener("resize", onResize);
+    }, []);
 
+    useEffect(() => {
         const context = new AudioContext({ sampleRate: 44010 });
         return () => { context.close(); };
     }, []);
