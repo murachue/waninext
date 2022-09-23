@@ -1,4 +1,4 @@
-import { Children, cloneElement, Dispatch, FunctionComponent, isValidElement, MouseEvent as RMouseEvent, PropsWithChildren, SetStateAction, useCallback, useRef, useState } from "react";
+import { Children, cloneElement, Dispatch, FunctionComponent, isValidElement, PropsWithChildren, ReactElement, SetStateAction, useCallback, useRef, useState } from "react";
 
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
@@ -16,16 +16,18 @@ const Draggable: FunctionComponent<PropsWithChildren<{
     const dragendref = useRef(dragend); // poor initval...
     dragendref.current = dragend;
 
-    const onMouseDown = useCallback((e: RMouseEvent) => {
+    const onMouseDown = useCallback((e: MouseEvent | TouchEvent) => {
         const target: HTMLElement = e.currentTarget! as HTMLElement;
         const posT = target.getBoundingClientRect();
         const posP = target.parentElement!.getBoundingClientRect();
-        const shiftX = e.clientX - posT.x;  // this should not offset(parent-relative) but client-pos(client-relative)
-        const shiftY = e.clientY - posT.y;  // ditto
+        const cxy = ("touches" in e ? e.touches[0] : e);
+        const shiftX = cxy.clientX - posT.x;  // this should not offset(parent-relative) but client-pos(client-relative)
+        const shiftY = cxy.clientY - posT.y;  // ditto
 
-        const onmousemove = (e: MouseEvent) => {
-            const rawx = Math.round(e.clientX - shiftX - posP.x);
-            const rawy = Math.round(e.clientY - shiftY - posP.y);
+        const onmousemove = (e: MouseEvent | TouchEvent) => {
+            const cxy = ("touches" in e ? e.touches[0] : e);
+            const rawx = Math.round(cxy.clientX - shiftX - posP.x);
+            const rawy = Math.round(cxy.clientY - shiftY - posP.y);
             const x = dontcramp ? rawx : clamp(rawx, 0, posP.width - posT.width);
             const y = dontcramp ? rawy : clamp(rawy, 0, posP.height - posT.height);
 
@@ -36,25 +38,31 @@ const Draggable: FunctionComponent<PropsWithChildren<{
             });
         };
 
-        const onmouseup = (e: MouseEvent) => {
+        const onmouseup = (e: MouseEvent | TouchEvent) => {
             document.removeEventListener("mousemove", onmousemove);
+            document.removeEventListener("touchmove", onmousemove);
             document.removeEventListener("mouseup", onmouseup);
+            document.removeEventListener("touchend", onmouseup);
 
-            dragendref.current && dragendref.current(e.currentTarget! as HTMLElement, e.clientX, e.clientY, setStyle);
+            const cxy = ("touches" in e ? e.touches[0] : e);
+            dragendref.current && dragendref.current(e.currentTarget! as HTMLElement, cxy.clientX, cxy.clientY, setStyle);
         };
 
         document.addEventListener("mousemove", onmousemove);
+        document.addEventListener("touchmove", onmousemove);
         document.addEventListener("mouseup", onmouseup);
+        document.addEventListener("touchend", onmouseup);
 
-        dragstart && dragstart(target, e.clientX, e.clientY);
+        dragstart && dragstart(target, cxy.clientX, cxy.clientY);
 
         e.stopPropagation();
     }, [dragstart, dragendref, dontcramp, style]);
 
     const child = Children.only(children);
     return <>
-        {!isValidElement(child) ? child : cloneElement(child as any/* FIXME */, {
+        {!isValidElement(child) ? child : cloneElement(child as ReactElement/* FIXME */, {
             onMouseDown,
+            onTouchStart: onMouseDown,
             style: { ...child.props?.style, ...style },
         })}
     </>;

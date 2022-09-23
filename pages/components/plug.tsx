@@ -1,4 +1,4 @@
-import { Dispatch, FunctionComponent, MouseEvent as RMouseEvent, SetStateAction, useCallback, useMemo, useRef } from "react";
+import { Dispatch, FunctionComponent, SetStateAction, MouseEvent as RMouseEvent, TouchEvent as RTouchEvent, useCallback, useMemo, useRef } from "react";
 import style from "./plug.module.css";
 
 export type Linking = {
@@ -45,43 +45,6 @@ const Plug: FunctionComponent<{
     const hdlrref = useRef<PlugHandlers>(handlers); // poor default value...
     hdlrref.current = handlers; // every component update updates current.
 
-    const onMouseDown = useCallback((e: RMouseEvent) => {
-        const context = { ...state };
-        do {
-            context.from = (e.currentTarget as HTMLElement).id || null; // or just props.id
-            context.to = null;
-            if (!context.from) {
-                break;
-            }
-
-            context.from = handlers.dragstart(context.from, e.clientX, e.clientY) ?? context.from;
-            // undefined(void) -> default from, "" -> prohibit dragging, other -> override from
-            if (!context.from) {
-                break;
-            }
-            const onMouseMove = (e: MouseEvent) => {
-                hdlrref.current.dragmove(e.clientX, e.clientY);
-                e.stopPropagation();
-            };
-            const onMouseUp = (e: Event) => {
-                const context = { ...ctxref.current };
-                hdlrref.current.dragend(
-                    (context.from && context.to && context.from !== context.to)
-                        ? { from: context.from, to: context.to }
-                        : undefined);
-                context.from = null;
-                context.to = null;
-                document.removeEventListener("mousemove", onMouseMove);
-                document.removeEventListener("mouseup", onMouseUp);
-                setState(context);
-                e.stopPropagation();
-            };
-            document.addEventListener("mousemove", onMouseMove);
-            document.addEventListener("mouseup", onMouseUp);
-        } while (false);
-        setState(context);
-        e.stopPropagation();
-    }, [state, setState, handlers]);
     const onMouseEnter = useCallback((e: RMouseEvent) => {
         const context = { ...state };
         do {
@@ -110,12 +73,63 @@ const Plug: FunctionComponent<{
         } while (false);
         e.stopPropagation();
     }, [state, setState, handlers]);
+    const onMouseDown = useCallback((e: RMouseEvent | RTouchEvent) => {
+        const context = { ...state };
+        const cxy = ("touches" in e ? e.touches[0] : e);
+        do {
+            context.from = (e.currentTarget as HTMLElement).id || null; // or just props.id
+            context.to = null;
+            if (!context.from) {
+                break;
+            }
+
+            context.from = handlers.dragstart(context.from, cxy.clientX, cxy.clientY) ?? context.from;
+            // undefined(void) -> default from, "" -> prohibit dragging, other -> override from
+            if (!context.from) {
+                break;
+            }
+            const onMouseMove = (e: MouseEvent | TouchEvent) => {
+                const cxy = ("touches" in e ? e.touches[0] : e);
+                hdlrref.current.dragmove(cxy.clientX, cxy.clientY);
+
+                if ("touches" in e) {
+                    // enter/leave emulation
+                    const el = document.elementFromPoint(cxy.clientX, cxy.clientY);
+                    // TODO
+                }
+
+                e.stopPropagation();
+            };
+            const onMouseUp = (e: Event) => {
+                const context = { ...ctxref.current };
+                hdlrref.current.dragend(
+                    (context.from && context.to && context.from !== context.to)
+                        ? { from: context.from, to: context.to }
+                        : undefined);
+                context.from = null;
+                context.to = null;
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("touchmove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+                document.removeEventListener("touchend", onMouseUp);
+                setState(context);
+                e.stopPropagation();
+            };
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("touchmove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+            document.addEventListener("touchend", onMouseUp);
+        } while (false);
+        setState(context);
+        e.stopPropagation();
+    }, [state, setState, handlers]);
 
     return <div className={style.plugcontainer}>
         <div
             id={id}
             className={style.plugbox}
             onMouseDown={onMouseDown}
+            onTouchStart={onMouseDown}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave} />
     </div>;
