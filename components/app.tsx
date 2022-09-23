@@ -5,6 +5,8 @@ import { TouchBackend } from "react-dnd-touch-backend";
 import style from "./app.module.css";
 import Desk from "./desk";
 import DraggingPreview from "./dragpreview";
+import SoundNode from "./sndnode";
+import { NodeTypes } from "./state";
 import TmplNode from "./tmplnode";
 
 const App = () => {
@@ -49,6 +51,12 @@ const App = () => {
                             <div className={style.node}>osc</div>
                         </div>
                     </TmplNode>
+                </div>
+                <div className={style.tmplmarginer}>
+                    <SoundNode state={{
+                        type: NodeTypes.find(e => e.type === "biquad")!,
+                        inputs: [],
+                    }} plugHandlers={{ dragstart: () => "" }} plugStateTuple={[{ from: null, to: null }, () => { }]} />
                 </div>
             </div>
             <DraggingPreview />

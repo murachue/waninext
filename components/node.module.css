@@ -22,3 +22,14 @@
     margin-left: var(--plug-spacing);
     margin-right: calc(-1 * (var(--plug-spacing) + var(--plug-width)));
 }
+
+.plugcontainer {
+    margin: 9px 0;
+}
+
+.plugbox {
+    width: var(--plug-width);
+    height: 8px;
+    background: #888;
+    border-radius: 8px;
+}

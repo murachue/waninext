@@ -1,5 +1,4 @@
-import { Dispatch, FunctionComponent, SetStateAction, MouseEvent as RMouseEvent, TouchEvent as RTouchEvent, useCallback, useMemo, useRef } from "react";
-import style from "./plug.module.css";
+import { Dispatch, FunctionComponent, SetStateAction, MouseEvent as RMouseEvent, TouchEvent as RTouchEvent, useCallback, useMemo, useRef, HTMLAttributes } from "react";
 
 export type Linking = {
     from: string;
@@ -25,11 +24,10 @@ const defaultState = {
 };
 export const defaultPlugState = () => ({ ...defaultState });
 
-const Plug: FunctionComponent<{
-    id?: string;
+const Plug: FunctionComponent<Pick<HTMLAttributes<HTMLElement>, "id" | "className" | "style"> & {
     handlers: Partial<PlugHandlers>;
     stateTuple: [PlugState, Dispatch<SetStateAction<PlugState>>]; // XXX: how to using typeof useState without undefined?
-}> = ({ id, handlers: partialHandlers, stateTuple: [state, setState] }) => {
+}> = ({ id, className, style, handlers: partialHandlers, stateTuple: [state, setState] }) => {
     // this should be useState but native DOM event handler must break closure (which is counterpart of pure immutable)...
     const ctxref = useRef<PlugState>(state); // poor default value...
     ctxref.current = state; // every component update updates current.
@@ -124,15 +122,14 @@ const Plug: FunctionComponent<{
         e.stopPropagation();
     }, [state, setState, handlers]);
 
-    return <div className={style.plugcontainer}>
-        <div
-            id={id}
-            className={style.plugbox}
-            onMouseDown={onMouseDown}
-            onTouchStart={onMouseDown}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave} />
-    </div>;
+    return <div
+        id={id}
+        className={className}
+        style={style}
+        onMouseDown={onMouseDown}
+        onTouchStart={onMouseDown}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave} />;
 };
 
 export default Plug;

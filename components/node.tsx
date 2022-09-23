@@ -10,11 +10,18 @@ const Node: FunctionComponent<PropsWithChildren<{
 }>> = ({ inputs, outputs, plugHandlers, plugStateTuple, children }) => {
     return <div className={style.outer}>
         <div className={`${style.plugs} ${style.inputside}`}>
-            {inputs.map((id, i) => <Plug key={id || i} id={id || undefined} handlers={plugHandlers} stateTuple={plugStateTuple} />)}
+            {inputs.map((id, i) =>
+                <div key={id || i} className={style.plugcontainer}>
+                    <Plug id={id || undefined} className={style.plugbox} handlers={plugHandlers} stateTuple={plugStateTuple} />
+                </div>)}
         </div>
         {children}
         <div className={`${style.plugs} ${style.outputside}`}>
-            {outputs.map((id, i) => <Plug key={id || i} id={id || undefined} handlers={plugHandlers} stateTuple={plugStateTuple} />)}
+            {outputs.map((id, i) =>
+                <div key={id || i} className={style.plugcontainer}>
+                    <Plug id={id || undefined} className={style.plugbox} handlers={plugHandlers} stateTuple={plugStateTuple} />
+                </div>
+            )}
         </div>
     </div>;
 };
