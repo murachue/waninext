@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     background: #ccc;
-    border-radius: 15px;
+    border-radius: 10px;
     border: 1px solid black;
     /* overflow: hidden; */
     min-width: 80px;
@@ -12,19 +12,21 @@
 .title {
     background: #666;
     color: #fff;
-    border-radius: 15px 15px 0 0;
+    border-radius: 10px 10px 0 0;
     width: 100%;
     height: 1em;
     padding: 0 10px;
 }
 
 .label {
-    width: 100%;
+    flex: 1;
+    margin: 0 10px;
 }
 
 .plug {
     --width: 15px;
     --overwrap: 5px;
+    flex: none;
     width: var(--width);
     height: 10px;
     border-radius: 10px;
@@ -36,23 +38,23 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 5px;
 }
 
 .input .plug {
+    /* overwrapping into label to make label spacing common for both input and output. */
     margin-left: calc(-1 * var(--width));
-    margin-right: var(--overwrap);
+    position: relative;
+    left: 5px;
 }
 
 .output {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 0 5px;
 }
 
 .output .plug {
     margin-left: calc(-1 * var(--width));
     position: relative;
-    left: var(--width);
+    left: calc(var(--width) - var(--overwrap));
 }

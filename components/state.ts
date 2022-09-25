@@ -23,7 +23,9 @@ export const NodeTypes: NodeType[] = [
             { name: "frequency", type: "param" },
             { name: "type", type: "string", choice: ["sine", "square", "sawtooth", "triangle", "custom"] },
         ],
-        outputs: [],
+        outputs: [
+            { name: "sound", type: "channels" },
+        ],
     },
     {
         type: "biquad",
@@ -50,10 +52,10 @@ export type ConnInput = {
 };
 
 export type ConstInput = {
-    value: number;
+    value: number | string;
 };
 
-export type Input = ConnInput | ConstInput;
+export type Input = ConnInput | ConstInput | null /* ConnInput only but not connected */;
 
 export type NodeState = {
     type: NodeType;  /* referencing shared NodeTypes[number] */
@@ -67,7 +69,7 @@ export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
     state => state.flatMap(
         (node, inode) => node.inputs
             .map((c, i): [Input, number] => [c, i])
-            .filter((ci): ci is [ConnInput, number] => "connectFrom" in ci[0])
+            .filter((ci): ci is [ConnInput, number] => !!ci[0] && "connectFrom" in ci[0])
             .map/* <Setting> */(
                 ([input, iinput]) => ({
                     from: genPlugId(input.connectFrom.nodeNo, OUTPUT, input.connectFrom.outNo),
@@ -77,3 +79,23 @@ export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
                         end: { side: "left" },
                     },
                 })));
+
+export const newState: (typename: string) => NodeState = typename => {
+    const type = NodeTypes.find(e => e.type === typename);
+    if (!type) {
+        throw new Error(`unknown NodeType ${typename}`);
+    }
+    return {
+        type,
+        inputs: type.inputs.map(e =>
+            e.type === "channels"
+                ? null
+                : e.choice
+                    ? { value: e.choice[0] }
+                    : e.type === "param"
+                        ? { value: 0 }
+                        : e.type === "string"
+                            ? { value: "" }
+                            : null),
+    };
+};

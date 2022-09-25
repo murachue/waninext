@@ -1,20 +1,20 @@
 // Node in the Template
-import { FunctionComponent, PropsWithChildren, useEffect, useState } from "react";
+import { FunctionComponent, HTMLAttributes, PropsWithChildren, useEffect, useState } from "react";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import Node from "./node";
 import { defaultPlugState, PlugState } from "./plug";
+import SoundNode from "./sndnode";
+import { NodeState } from "./state";
 
-const TmplNode: FunctionComponent<PropsWithChildren<{
-    inputs: (string | null | undefined)[];
-    outputs: (string | null | undefined)[];
+const TmplNode: FunctionComponent<PropsWithChildren<Partial<Pick<HTMLAttributes<HTMLElement>, "className" | "style">> & {
+    state: NodeState;
     preview?: boolean;
-}>> = ({ inputs, outputs, children, preview }) => {
+}>> = ({ className, style, state, children, preview }) => {
     const dummyPlug = useState<PlugState>(defaultPlugState());
     const [{ isDragging }, dragref, dragpreview] = useDrag({
         type: "TmplNode",
         // options: { dropEffect: "copy" },  // if we specify options, draggable become false and never returned to true... react-dnd@16
-        item: { inputs, outputs, plugHandlers: { dragstart: () => "" }, plugStateTuple: dummyPlug, children },
+        item: { state, plugHandlers: { dragstart: () => "" }, plugStateTuple: dummyPlug, children },
         collect: monitor => ({
             isDragging: !!monitor.isDragging(),
         }),
@@ -24,11 +24,13 @@ const TmplNode: FunctionComponent<PropsWithChildren<{
     }, [dragpreview]);
 
     return <div ref={dragref} style={{ opacity: isDragging ? 0.5 : 1 }}>
-        <Node inputs={inputs} outputs={outputs} plugHandlers={{ dragstart: () => "" }} plugStateTuple={dummyPlug}>
-            <div style={preview ? { boxShadow: "0 5px 5px black" } : {}}>
-                {children}
-            </div>
-        </Node>
+        <SoundNode
+            className={className}
+            style={{ ...(style || {}), boxShadow: preview ? "0 5px 5px black" : undefined }}
+            index={"x"}
+            state={state}
+            plugHandlers={{ dragstart: () => "" }}
+            plugStateTuple={[{ from: null, to: null }, () => { }]} />
     </div>;
 };
 
