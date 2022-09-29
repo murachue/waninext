@@ -128,8 +128,12 @@ export const Bezier: FunctionComponent<PropsWithChildren<{ settings: Setting[]; 
                 if (id2settings[target.id]) {
                     id2settings[target.id].forEach(e => setList.add(e));
                 } else {
+                    const html = target.innerHTML;
+                    if (!html) {
+                        continue;
+                    }
                     // update if it contains connected, roughly.
-                    const matchAll = target.innerHTML.matchAll(/id=['"`](.+?)['"`]/g);
+                    const matchAll = html.matchAll(/id=['"`](.+?)['"`]/g);
                     const ids = Array.from(matchAll).map(match => match[1]);
                     for (const id of ids) {
                         if (id2settings[id]) {

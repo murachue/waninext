@@ -16,8 +16,8 @@ const DraggingPreview = () => {
     return <div style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%", pointerEvents: "none" }}>
         <div style={{ width: "min-content", transform: `translate(${offset.x}px,${offset.y}px)` }}>
             {({
-                "InstNode": <InstNode {...item} preview />,
-                "TmplNode": <TmplNode {...item} preview />,
+                // "InstNode": <InstNode {...item} preview />,
+                "TmplNode": <TmplNode {...item} plugHandlers={{ dragstart: () => "" }} plugStateTuple={[{}, () => { }]} preview />,
             } as any)[type!]}
         </div>
     </div>;

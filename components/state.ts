@@ -47,15 +47,12 @@ export type InConnection = {
     outNo: number;
 };
 
-export type ConnInput = {
-    connectFrom: InConnection;
+export type Input = {
+    connectFrom: InConnection | null /* null: not connected */;
+    value: number | string | null /* null is only for connect-only */;
 };
 
-export type ConstInput = {
-    value: number | string;
-};
-
-export type Input = ConnInput | ConstInput | null /* ConnInput only but not connected */;
+type ConnectedInput = Input & { connectFrom: NonNullable<Input["connectFrom"]>; };
 
 export type NodeState = {
     type: NodeType;  /* referencing shared NodeTypes[number] */
@@ -63,13 +60,13 @@ export type NodeState = {
 };
 
 export const INPUT = "i", OUTPUT = "o";
-export const genPlugId = (nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number) => `${nodeNo}${io}${pinNo}`;
+export const genPlugId = (nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number) => `n${nodeNo}${io}${pinNo}`;
 
 export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
     state => state.flatMap(
         (node, inode) => node.inputs
             .map((c, i): [Input, number] => [c, i])
-            .filter((ci): ci is [ConnInput, number] => !!ci[0] && "connectFrom" in ci[0])
+            .filter((ci): ci is [ConnectedInput, number] => !!ci[0].connectFrom)
             .map/* <Setting> */(
                 ([input, iinput]) => ({
                     from: genPlugId(input.connectFrom.nodeNo, OUTPUT, input.connectFrom.outNo),
@@ -89,13 +86,13 @@ export const newState: (typename: string) => NodeState = typename => {
         type,
         inputs: type.inputs.map(e =>
             e.type === "channels"
-                ? null
+                ? { connectFrom: null, value: null }
                 : e.choice
-                    ? { value: e.choice[0] }
+                    ? { connectFrom: null, value: e.choice[0] }
                     : e.type === "param"
-                        ? { value: 0 }
+                        ? { connectFrom: null, value: 0 }
                         : e.type === "string"
-                            ? { value: "" }
-                            : null),
+                            ? { connectFrom: null, value: "" }
+                            : { connectFrom: null, value: null }),
     };
 };

@@ -86,6 +86,7 @@ const Plug: FunctionComponent<Pick<HTMLAttributes<HTMLElement>, "id" | "classNam
             if (!context.from) {
                 break;
             }
+            // TODO: if from is overriden, we must test mouseEnter.
             const onMouseMove = (e: MouseEvent | TouchEvent) => {
                 const cxy = ("touches" in e ? e.touches[0] : e);
                 hdlrref.current.dragmove(cxy.clientX, cxy.clientY);

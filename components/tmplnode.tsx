@@ -6,15 +6,15 @@ import { defaultPlugState, PlugState } from "./plug";
 import SoundNode from "./sndnode";
 import { NodeState } from "./state";
 
-const TmplNode: FunctionComponent<PropsWithChildren<Partial<Pick<HTMLAttributes<HTMLElement>, "className" | "style">> & {
+const TmplNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "className" | "style">> & {
     state: NodeState;
     preview?: boolean;
-}>> = ({ className, style, state, children, preview }) => {
+}> = ({ className, style, state, preview }) => {
     const dummyPlug = useState<PlugState>(defaultPlugState());
     const [{ isDragging }, dragref, dragpreview] = useDrag({
         type: "TmplNode",
         // options: { dropEffect: "copy" },  // if we specify options, draggable become false and never returned to true... react-dnd@16
-        item: { state, plugHandlers: { dragstart: () => "" }, plugStateTuple: dummyPlug, children },
+        item: { state },
         collect: monitor => ({
             isDragging: !!monitor.isDragging(),
         }),
@@ -27,7 +27,7 @@ const TmplNode: FunctionComponent<PropsWithChildren<Partial<Pick<HTMLAttributes<
         <SoundNode
             className={className}
             style={{ ...(style || {}), boxShadow: preview ? "0 5px 5px black" : undefined }}
-            index={"x"}
+            index={"x" /* dummy */}
             state={state}
             plugHandlers={{ dragstart: () => "" }}
             plugStateTuple={[{ from: null, to: null }, () => { }]} />

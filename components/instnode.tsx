@@ -5,15 +5,17 @@ import { getEmptyImage } from "react-dnd-html5-backend";
 import Draggable from "./dragable";
 import Node from "./node";
 import Plug from "./plug";
+import SoundNode from "./sndnode";
+import { NodeState } from "./state";
 
-const InstNode: FunctionComponent<PropsWithChildren<{
-    inputs: (string | null | undefined)[];
-    outputs: (string | null | undefined)[];
+const InstNode: FunctionComponent<{
+    index: number;
+    state: NodeState;
     plugHandlers: Parameters<typeof Plug>[0]["handlers"];
     plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
     x: number;
     y: number;
-}>> = ({ inputs, outputs, plugHandlers, plugStateTuple, x, y, children }) => {
+}> = ({ index, state, plugHandlers, plugStateTuple, x, y }) => {
     // const [{ isDragging, offset }, dragref, preview] = useDrag({
     //     type: "InstNode",
     //     options: { dropEffect: "move" },
@@ -40,9 +42,11 @@ const InstNode: FunctionComponent<PropsWithChildren<{
 
     return <Draggable>
         <div style={{ left: x, top: y }}>
-            <Node inputs={inputs} outputs={outputs} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                {children}
-            </Node>
+            <SoundNode
+                index={index}
+                state={state}
+                plugHandlers={plugHandlers}
+                plugStateTuple={plugStateTuple} />
         </div>
     </Draggable>;
 };

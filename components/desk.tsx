@@ -4,37 +4,69 @@ import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import InstNode from "./instnode";
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
+import { genPlugId, InConnection, NodeState, NodeTypes, stateToBezierLinks } from "./state";
 
-class MapEx<K, V> extends Map<K, V> {
-    entriesarr() {
-        return Array.from(this.entries());
+type GuiNodeState = {
+    x: number;
+    y: number;
+    state: NodeState;
+};
+
+const cloneset = <T/* extends array|object */,>(target: T, path: (number | string)[], value: unknown): T => {
+    if (path.length < 1) {
+        throw new Error(`empty path: ${JSON.stringify(path)}`);
     }
-    valuesarr() {
-        return Array.from(this.values());
-    }
-    filter(pred: ((e: [K, V], i: number, a: [K, V][]) => boolean) | null): MapEx<K, V> {
-        if (pred === null) {
-            return this;
+    const [path0, ...pathr] = path;
+    if (pathr.length < 1) {
+        if (Array.isArray(target)) {
+            if (typeof path0 !== "number") {
+                throw new Error(`path must be number: ${path0}`);
+            }
+            return [...target.slice(0, path0), value, ...target.slice(path0 + 1)] as T;
+        } else {
+            return { ...target, [path0]: value } as T;
         }
-        return new MapEx(this.entriesarr().filter(pred));
     }
-    plus(values: [K, V][] | null): MapEx<K, V> {
-        if (values === null) {
-            return this;
+    if (Array.isArray(target)) {
+        if (typeof path0 !== "number") {
+            throw new Error(`path must be number: ${path0}`);
         }
-        // TODO: if we pass same key twice, latter wins?
-        return new MapEx([...this.entriesarr(), ...values]);
+        return [...target.slice(0, path0), cloneset(target[path0], pathr, value), ...target.slice(path0 + 1)] as T;
+    } else {
+        return { ...target, [path0]: cloneset((target as any)[path0], pathr, value) } as T;
     }
-}
+};
 
 const Desk = () => {
-    const [links, setLinks] = useState<MapEx<string, Setting>>(new MapEx([
-        ["ao1bi1", {
-            from: "ao1", to: "bi1",
-            positions: { start: { side: "right" }, end: { side: "left" } },
-            class: style.blueLine
-        }],
-    ]));
+    const [nodes, setNodes] = useState<GuiNodeState[]>([
+        {
+            x: 30,
+            y: 180,
+            state: {
+                type: NodeTypes.find(t => t.type === "oscillator")!,
+                inputs: [
+                    { connectFrom: null, value: 440 },
+                    { connectFrom: null, value: "sin" },
+                ],
+            },
+        },
+        {
+            x: 190,
+            y: 190,
+            state: {
+                type: NodeTypes.find(t => t.type === "output")!,
+                inputs: [
+                    { connectFrom: { nodeNo: 0, outNo: 0 }, value: null },
+                ],
+            },
+        },
+    ]);
+    const [previewLink, setPreviewLink] = useState<Setting[]>([]);
+    const allLinks = [
+        ...useMemo(() => stateToBezierLinks(nodes.map(e => e.state)).map(e => ({ ...e, class: style.blueLine })), [nodes]),
+        ...previewLink,
+    ];
+
     const [draggingStyle, setDraggingStyle] = useState<Partial<Pick<CSSProperties, "left" | "top" | "display" | "position">>>({
         position: "absolute",
         display: "none",
@@ -43,94 +75,78 @@ const Desk = () => {
     const previewid = "preview";
 
     const dragstart = useCallback<PlugHandlers["dragstart"]>((from: string, x: number, y: number) => {
-        let overridelink: Setting | undefined = undefined;
-        if (/[a-z]+i[0-9]+/.exec(from)) {
-            overridelink = links.valuesarr().find(e => e.to === from);
-            if (!overridelink) {
-                // abort
+        let overridelink: string | undefined = undefined;
+        const match = /^n([0-9]+)i([0-9]+)$/.exec(from);
+        if (match) {
+            const ink = { id: from, nodeNo: parseInt(match[1]), outNo: parseInt(match[2]) };
+            const connFrom = nodes[ink.nodeNo].state.inputs[ink.outNo].connectFrom;
+            if (!connFrom) {
+                // not connected input: abort, do nothing.
                 return "";
             }
+
+            overridelink = genPlugId(connFrom.nodeNo, "o", connFrom.outNo);
+
+            // unlink
+            setNodes(cloneset(nodes, [ink.nodeNo, "state", "inputs", ink.outNo, "connectFrom"], null));
         }
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, display: "block", left: `${x}px`, top: `${y}px` }));
-        setLinks(_links => links
-            .filter(!overridelink ? null : ([k, v]) => v !== overridelink)
-            .plus([
-                [previewid, {
-                    from: overridelink?.from || from,
-                    to: previewid,
-                    positions: { start: { side: "right" }, end: { side: "left" } },
-                    class: `${style.blueLine} ${style.dash}`,
-                }],
-            ]));
-        return overridelink?.from;
-    }, [links, draggingStyle]);
+        setPreviewLink([{
+            from: overridelink || from,
+            to: previewid,
+            positions: { start: { side: "right" }, end: { side: "left" } },
+            class: `${style.blueLine} ${style.dash}`,
+        }]);
+        return overridelink;
+    }, [nodes]);
     const dragmove = useCallback((x: number, y: number): void => {
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, left: `${x}px`, top: `${y}px` }));
-    }, [draggingStyle]);
+    }, []);
     const dragend = useCallback((linking?: Linking) => {
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, display: "none" }));
+        setPreviewLink([]);
 
-        const overriddenlink = linking && links.valuesarr().find(e => e.from !== linking.from && e.to === linking.to);
-        setLinks(_links => links
-            .filter(([k, v]) => k !== previewid && v !== overriddenlink)
-            .plus(
-                !linking || /[a-z]+o[0-9]+/.exec(linking.to) ? [] : [
-                    [`${linking.from}${linking.to}`, {
-                        from: linking.from,
-                        to: linking.to,
-                        positions: { start: { side: "right" }, end: { side: "left" } },
-                        class: style.blueLine,
-                    }],
-                ]));
-    }, [links, draggingStyle]);
+        if (!linking) {
+            return;
+        }
+        const fmatch = /^n([0-9]+)o([0-9]+)$/.exec(linking.from);
+        if (!fmatch) {
+            return;
+        }
+        const tmatch = /^n([0-9]+)i([0-9]+)$/.exec(linking.to);
+        if (!tmatch) {
+            return;
+        }
+
+        const flink = { id: linking.from, nodeNo: parseInt(fmatch[1]), outNo: parseInt(fmatch[2]) };
+        const tlink = { id: linking.to, nodeNo: parseInt(tmatch[1]), outNo: parseInt(tmatch[2]) };
+        setNodes(cloneset(
+            nodes,
+            [tlink.nodeNo, "state", "inputs", tlink.outNo, "connectFrom"],
+            { nodeNo: flink.nodeNo, outNo: flink.outNo }));
+    }, [nodes]);
     const linkpreview = useCallback((from: string, to: string): void => {
-        if (/[a-z]+o[0-9]+/.exec(to)) {
+        if (!/^n([0-9]+)i([0-9]+)$/.exec(to)) {
             return;
         }
-        const overriddenlink = links.valuesarr().find(e => e.to === to);
-        setLinks(_links => links
-            .filter(!overriddenlink ? null : ([k, v]) => v !== overriddenlink)
-            .plus(!overriddenlink
-                ? null
-                : [
-                    [`${overriddenlink.from}${overriddenlink.to}`, {
-                        ...overriddenlink,
-                        class: `${style.blueLine} ${style.dash}`
-                    }],
-                ])
-            .plus([
-                [previewid, {
-                    from,
-                    to,
-                    positions: { start: { side: "right" }, end: { side: "left" } },
-                    class: `${style.blueLine}`,
-                }],
-            ]));
-    }, [links]);
+        setPreviewLink([{
+            from,
+            to,
+            positions: { start: { side: "right" }, end: { side: "left" } },
+            class: `${style.blueLine}`,
+        }]);
+    }, []);
     const unlinkpreview = useCallback((from: string, to: string): void => {
-        if (/[a-z]+o[0-9]+/.exec(to)) {
+        if (!/^n([0-9]+)i([0-9]+)$/.exec(to)) {
             return;
         }
-        const overriddenlink = links.valuesarr().find(e => e.from !== from && e.to === to);
-        setLinks(_links => links
-            .filter(!overriddenlink ? null : ([k, v]) => v !== overriddenlink)
-            .plus(!overriddenlink
-                ? []
-                : [
-                    [`${overriddenlink.from}${overriddenlink.to}`, {
-                        ...overriddenlink,
-                        class: style.blueLine
-                    }],
-                ])
-            .plus([
-                [previewid, {
-                    from,
-                    to: previewid,
-                    positions: { start: { side: "right" }, end: { side: "left" } },
-                    class: `${style.blueLine} ${style.dash}`,
-                }],
-            ]));
-    }, [links]);
+        setPreviewLink([{
+            from,
+            to: previewid,
+            positions: { start: { side: "right" }, end: { side: "left" } },
+            class: `${style.blueLine} ${style.dash}`,
+        }]);
+    }, []);
     const plugHandlers: PlugHandlers = useMemo(() => ({
         dragstart,
         dragmove,
@@ -139,25 +155,21 @@ const Desk = () => {
         unlinkpreview,
     }), [dragstart, dragmove, dragend, linkpreview, unlinkpreview]);
 
-    const [, dropref] = useDrop({ accept: ["InstNode", "TmplNode"], drop: (item: unknown) => { console.log(item); } }, []);
+    const [, dropref] = useDrop({
+        accept: [/* "InstNode", */ "TmplNode"],
+        drop: (item: { state: NodeState; }, monitor) => {
+            const { x, y } = monitor.getSourceClientOffset()!;
+            setNodes([...nodes, { state: item.state, x, y }]);
+        }
+    }, [nodes]);
 
     return <div ref={dropref} style={{ width: "100%", height: "100%" }}>
-        <Bezier settings={links.valuesarr()}>
-            <InstNode inputs={["ai1"]} outputs={["ao1", "ao2", "ao3", "ao4"]} x={30} y={130} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div className={style.nodecontainer}>
-                    <div className={style.node}>drag me 1</div>
-                </div>
-            </InstNode>
-            <InstNode inputs={["bi1"]} outputs={[]} x={180} y={130} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div className={style.nodecontainer}>
-                    <div className={style.node}>drag me 2</div>
-                </div>
-            </InstNode>
-            <InstNode inputs={["ci1", "ci2"]} outputs={["co1", "co2"]} x={80} y={250} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple}>
-                <div className={style.nodecontainer}>
-                    <div className={style.node}>drag me 3</div>
-                </div>
-            </InstNode>
+        <Bezier settings={allLinks}>
+            {nodes.map((n, i) =>
+                // <div key={i}>
+                <InstNode key={i} index={i} x={n.x} y={n.y} state={n.state} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple} />
+                // </div>
+            )}
             <div id={previewid} style={draggingStyle} />
         </Bezier>
     </div>;
