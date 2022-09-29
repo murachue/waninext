@@ -61,6 +61,22 @@ export type NodeState = {
 
 export const INPUT = "i", OUTPUT = "o";
 export const genPlugId = (nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number) => `n${nodeNo}${io}${pinNo}`;
+export const parseInputPlugId = (id: string) => {
+    const match = /^n([0-9]+)i([0-9]+)$/.exec(id);
+    if (!match) {
+        return null;
+    }
+
+    return { nodeNo: parseInt(match[1]), outNo: parseInt(match[2]) };
+};
+export const parseOutputPlugId = (id: string) => {
+    const match = /^n([0-9]+)o([0-9]+)$/.exec(id);
+    if (!match) {
+        return null;
+    }
+
+    return { nodeNo: parseInt(match[1]), outNo: parseInt(match[2]) };
+};
 
 export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
     state => state.flatMap(

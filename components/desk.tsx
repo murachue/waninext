@@ -4,7 +4,7 @@ import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import InstNode from "./instnode";
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
-import { genPlugId, InConnection, NodeState, NodeTypes, stateToBezierLinks } from "./state";
+import { genPlugId, NodeState, NodeTypes, parseInputPlugId, parseOutputPlugId, stateToBezierLinks } from "./state";
 
 type GuiNodeState = {
     x: number;
@@ -76,9 +76,8 @@ const Desk = () => {
 
     const dragstart = useCallback<PlugHandlers["dragstart"]>((from: string, x: number, y: number) => {
         let overridelink: string | undefined = undefined;
-        const match = /^n([0-9]+)i([0-9]+)$/.exec(from);
-        if (match) {
-            const ink = { id: from, nodeNo: parseInt(match[1]), outNo: parseInt(match[2]) };
+        const ink = parseInputPlugId(from);
+        if (ink) {
             const connFrom = nodes[ink.nodeNo].state.inputs[ink.outNo].connectFrom;
             if (!connFrom) {
                 // not connected input: abort, do nothing.
@@ -109,24 +108,22 @@ const Desk = () => {
         if (!linking) {
             return;
         }
-        const fmatch = /^n([0-9]+)o([0-9]+)$/.exec(linking.from);
-        if (!fmatch) {
+        const flink = parseOutputPlugId(linking.from);
+        if (!flink) {
             return;
         }
-        const tmatch = /^n([0-9]+)i([0-9]+)$/.exec(linking.to);
-        if (!tmatch) {
+        const tlink = parseInputPlugId(linking.to);
+        if (!tlink) {
             return;
         }
 
-        const flink = { id: linking.from, nodeNo: parseInt(fmatch[1]), outNo: parseInt(fmatch[2]) };
-        const tlink = { id: linking.to, nodeNo: parseInt(tmatch[1]), outNo: parseInt(tmatch[2]) };
         setNodes(cloneset(
             nodes,
             [tlink.nodeNo, "state", "inputs", tlink.outNo, "connectFrom"],
             { nodeNo: flink.nodeNo, outNo: flink.outNo }));
     }, [nodes]);
     const linkpreview = useCallback((from: string, to: string): void => {
-        if (!/^n([0-9]+)i([0-9]+)$/.exec(to)) {
+        if (!parseInputPlugId(to)) {
             return;
         }
         setPreviewLink([{
@@ -137,7 +134,7 @@ const Desk = () => {
         }]);
     }, []);
     const unlinkpreview = useCallback((from: string, to: string): void => {
-        if (!/^n([0-9]+)i([0-9]+)$/.exec(to)) {
+        if (!parseInputPlugId(to)) {
             return;
         }
         setPreviewLink([{
