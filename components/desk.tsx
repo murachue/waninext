@@ -84,10 +84,9 @@ const Desk = () => {
                 return "";
             }
 
-            overridelink = genPlugId(connFrom.nodeNo, "o", connFrom.outNo);
-
-            // unlink
+            // unlink and takeover that output
             setNodes(cloneset(nodes, [ink.nodeNo, "state", "inputs", ink.outNo, "connectFrom"], null));
+            overridelink = genPlugId(connFrom.nodeNo, "o", connFrom.outNo);
         }
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, display: "block", left: `${x}px`, top: `${y}px` }));
         setPreviewLink([{

@@ -1,4 +1,4 @@
-import { FunctionComponent, PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
+import { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import style from "./bezier.module.css";
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
@@ -159,10 +159,12 @@ export const Bezier: FunctionComponent<PropsWithChildren<{ settings: Setting[]; 
         };
     }, [id2settings, lines, updateLinesObj]);
 
+    const linesArr = useMemo(() => Object.entries(lines), [lines]);
+
     return (
         <div ref={container} className={style.container}>
             <svg className={style.bezierLine}>
-                {Object.entries(lines).map(([id, line]) =>
+                {linesArr.map(([id, line]) =>
                     <path key={id} className={line.class} d={
                         `M${line.cord0.x} ${line.cord0.y}` +
                         `C${line.cord1.x} ${line.cord1.y}` +
