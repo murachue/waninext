@@ -6,7 +6,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
     dontcramp?: boolean;
     dragstart?: (e: HTMLElement, x: number, y: number) => void;
     dragend?: (e: HTMLElement, x: number, y: number, setStyle: Dispatch<SetStateAction<any>>) => void;
-}>> = ({ dontcramp, dragstart, dragend, children }) => {
+}>> = ({ dontcramp, dragstart: dragstart = () => { }, dragend: dragend = () => { }, children }) => {
     const [style, setStyle] = useState<{ left?: string, top?: string, position: string, userSelect: string; }>({
         // left: "0px",
         // top: "0px",
@@ -44,8 +44,8 @@ const Draggable: FunctionComponent<PropsWithChildren<{
             document.removeEventListener("mouseup", onmouseup);
             document.removeEventListener("touchend", onmouseup);
 
-            const cxy = ("touches" in e ? e.touches[0] : e);
-            dragendref.current && dragendref.current(e.currentTarget! as HTMLElement, cxy.clientX, cxy.clientY, setStyle);
+            const cxy = "touches" in e ? e.touches[0] : e;
+            dragendref.current(e.currentTarget! as HTMLElement, cxy.clientX, cxy.clientY, setStyle);
         };
 
         document.addEventListener("mousemove", onmousemove);
@@ -53,7 +53,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
         document.addEventListener("mouseup", onmouseup);
         document.addEventListener("touchend", onmouseup);
 
-        dragstart && dragstart(target, cxy.clientX, cxy.clientY);
+        dragstart(target, cxy.clientX, cxy.clientY);
 
         e.stopPropagation();
     }, [dragstart, dragendref, dontcramp, style]);

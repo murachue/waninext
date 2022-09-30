@@ -1,69 +1,22 @@
-import { CSSProperties, useCallback, useMemo, useState } from "react";
-import { useDrop } from "react-dnd";
+import { CSSProperties, FunctionComponent, useCallback, useMemo, useState } from "react";
+import { useDrop, XYCoord } from "react-dnd";
 import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import InstNode from "./instnode";
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
-import { genPlugId, NodeState, NodeTypes, parseInputPlugId, parseOutputPlugId, stateToBezierLinks } from "./state";
+import { genPlugId, InConnection, NodeState, parseInputPlugId, parseOutputPlugId, stateToBezierLinks } from "./state";
 
-type GuiNodeState = {
-    x: number;
-    y: number;
-    state: NodeState;
-};
-
-const cloneset = <T/* extends array|object */,>(target: T, path: (number | string)[], value: unknown): T => {
-    if (path.length < 1) {
-        throw new Error(`empty path: ${JSON.stringify(path)}`);
-    }
-    const [path0, ...pathr] = path;
-    if (pathr.length < 1) {
-        if (Array.isArray(target)) {
-            if (typeof path0 !== "number") {
-                throw new Error(`path must be number: ${path0}`);
-            }
-            return [...target.slice(0, path0), value, ...target.slice(path0 + 1)] as T;
-        } else {
-            return { ...target, [path0]: value } as T;
-        }
-    }
-    if (Array.isArray(target)) {
-        if (typeof path0 !== "number") {
-            throw new Error(`path must be number: ${path0}`);
-        }
-        return [...target.slice(0, path0), cloneset(target[path0], pathr, value), ...target.slice(path0 + 1)] as T;
-    } else {
-        return { ...target, [path0]: cloneset((target as any)[path0], pathr, value) } as T;
-    }
-};
-
-const Desk = () => {
-    const [nodes, setNodes] = useState<GuiNodeState[]>([
-        {
-            x: 30,
-            y: 180,
-            state: {
-                type: NodeTypes.find(t => t.type === "oscillator")!,
-                inputs: [
-                    { connectFrom: null, value: 440 },
-                    { connectFrom: null, value: "sin" },
-                ],
-            },
-        },
-        {
-            x: 190,
-            y: 190,
-            state: {
-                type: NodeTypes.find(t => t.type === "output")!,
-                inputs: [
-                    { connectFrom: { nodeNo: 0, outNo: 0 }, value: null },
-                ],
-            },
-        },
-    ]);
+const Desk: FunctionComponent<{
+    nodes: NodeState[];
+    nodeposs: XYCoord[];
+    onnodeadd: (node: NodeState, xy: XYCoord) => void;
+    onnodemove: (i: number, x: number, y: number) => void;
+    onrewire: (from: InConnection | null, to: InConnection) => void;
+    onnoderemove: (i: number) => void;
+}> = ({ nodes, nodeposs, onnodeadd, onnodemove, onrewire, onnoderemove }) => {
     const [previewLink, setPreviewLink] = useState<Setting[]>([]);
     const allLinks = [
-        ...useMemo(() => stateToBezierLinks(nodes.map(e => e.state)).map(e => ({ ...e, class: style.blueLine })), [nodes]),
+        ...useMemo(() => stateToBezierLinks(nodes).map(e => ({ ...e, class: style.blueLine })), [nodes]),
         ...previewLink,
     ];
 
@@ -78,14 +31,14 @@ const Desk = () => {
         let overridelink: string | undefined = undefined;
         const ink = parseInputPlugId(from);
         if (ink) {
-            const connFrom = nodes[ink.nodeNo].state.inputs[ink.outNo].connectFrom;
+            const connFrom = nodes[ink.nodeNo].inputs[ink.outNo].connectFrom;
             if (!connFrom) {
                 // not connected input: abort, do nothing.
                 return "";
             }
 
             // unlink and takeover that output
-            setNodes(cloneset(nodes, [ink.nodeNo, "state", "inputs", ink.outNo, "connectFrom"], null));
+            onrewire(null, ink);
             overridelink = genPlugId(connFrom.nodeNo, "o", connFrom.outNo);
         }
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, display: "block", left: `${x}px`, top: `${y}px` }));
@@ -116,10 +69,7 @@ const Desk = () => {
             return;
         }
 
-        setNodes(cloneset(
-            nodes,
-            [tlink.nodeNo, "state", "inputs", tlink.outNo, "connectFrom"],
-            { nodeNo: flink.nodeNo, outNo: flink.outNo }));
+        onrewire({ nodeNo: flink.nodeNo, outNo: flink.outNo }, tlink);
     }, [nodes]);
     const linkpreview = useCallback((from: string, to: string): void => {
         if (!parseInputPlugId(to)) {
@@ -154,16 +104,23 @@ const Desk = () => {
     const [, dropref] = useDrop({
         accept: [/* "InstNode", */ "TmplNode"],
         drop: (item: { state: NodeState; }, monitor) => {
-            const { x, y } = monitor.getSourceClientOffset()!;
-            setNodes([...nodes, { state: item.state, x, y }]);
+            onnodeadd(item.state, monitor.getSourceClientOffset()!);
         }
     }, [nodes]);
 
     return <div ref={dropref} style={{ width: "100%", height: "100%" }}>
         <Bezier settings={allLinks}>
-            {nodes.map((n, i) =>
+            {nodes.map((node, i) =>
                 // <div key={i}>
-                <InstNode key={i} index={i} x={n.x} y={n.y} state={n.state} plugHandlers={plugHandlers} plugStateTuple={plugStateTuple} />
+                <InstNode
+                    key={i}
+                    index={i}
+                    x={nodeposs[i].x}
+                    y={nodeposs[i].y}
+                    state={node}
+                    plugHandlers={plugHandlers}
+                    plugStateTuple={plugStateTuple}
+                    dragend={(e, x, y, setStyle) => { onnodemove(i, x, y); }} />
                 // </div>
             )}
             <div id={previewid} style={draggingStyle} />
