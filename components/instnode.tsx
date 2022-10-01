@@ -17,7 +17,8 @@ const InstNode: FunctionComponent<{
     y: number;
     dragstart?: Parameters<typeof Draggable>[0]["dragstart"];
     dragend?: Parameters<typeof Draggable>[0]["dragend"];
-}> = ({ index, state, plugHandlers, plugStateTuple, x, y, dragstart, dragend }) => {
+    onChange: Parameters<typeof SoundNode>[0]["onChange"];
+}> = ({ index, state, plugHandlers, plugStateTuple, x, y, dragstart, dragend, onChange }) => {
     // const [{ isDragging, offset }, dragref, preview] = useDrag({
     //     type: "InstNode",
     //     options: { dropEffect: "move" },
@@ -48,7 +49,8 @@ const InstNode: FunctionComponent<{
                 index={index}
                 state={state}
                 plugHandlers={plugHandlers}
-                plugStateTuple={plugStateTuple} />
+                plugStateTuple={plugStateTuple}
+                onChange={onChange} />
         </div>
     </Draggable>;
 };

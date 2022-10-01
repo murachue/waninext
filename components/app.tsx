@@ -46,15 +46,23 @@ const App = () => {
             ],
         },
         {
-            type: NodeTypes.find(t => t.type === "output")!,
+            type: NodeTypes.find(t => t.type === "gain")!,
             inputs: [
                 { connectFrom: { nodeNo: 0, outNo: 0 }, value: null },
+                { connectFrom: null, value: "0.2" },
+            ],
+        },
+        {
+            type: NodeTypes.find(t => t.type === "output")!,
+            inputs: [
+                { connectFrom: { nodeNo: 1, outNo: 0 }, value: null },
             ],
         },
     ]);
     const [nodeposs, setNodeposs] = useState<XYCoord[]>([
-        { x: 30, y: 180 },
-        { x: 190, y: 190 },
+        { x: 30, y: 230 },
+        { x: 190, y: 240 },
+        { x: 330, y: 250 },
     ]);
 
     useEffect(() => {
@@ -66,8 +74,40 @@ const App = () => {
 
     useEffect(() => {
         const context = new AudioContext({ sampleRate: 44010 });
+
+        const wanodes = nodes.map(node => node.type.make(context));
+        nodes.forEach((node, inode) => {
+            node.type.inputs.forEach((inty, iinput) => {
+                const nin = node.inputs[iinput];
+                const cfrom = nin.connectFrom;
+                if (!cfrom) {
+                    return;
+                }
+                const wain = wanodes[inode];
+                // const out = nodes[cfrom.nodeNo].type.outputs[cfrom.outNo];
+                // TODO: output other than node itself? ChannelSplitter or AudioWorklet
+                // following code confuses overload of connect()
+                // const inap = inty.type === "channels" ? wain : ((wain as any)[inty.param || inty.name] as AudioParam | undefined);
+                // if (inap) {
+                //     wanodes[cfrom.nodeNo].connect(inap);
+                // }
+                if (inty.type === "channels") {
+                    wanodes[cfrom.nodeNo].connect(wain);
+                } else {
+                    const inap = (wain as any)[inty.param || inty.name] as AudioParam | undefined;
+                    wanodes[cfrom.nodeNo].connect(wain);
+                }
+            });
+        });
+
+        nodes.forEach((node, inode) => {
+            if (node.type.type === "oscillator") {
+                (wanodes[inode] as AudioScheduledSourceNode).start();
+            }
+        });
+
         return () => { context.close(); };
-    }, []);
+    }, [nodes]);
 
     return <div id="app">
         <DndProvider backend={width < 800 ? TouchBackend : HTML5Backend}>
@@ -87,6 +127,9 @@ const App = () => {
                 onnoderemove={(i) => {
                     setNodes(clonesplice1(nodes, i));
                     setNodeposs(clonesplice1(nodeposs, i));
+                }}
+                onchange={(nodeno, inno, value) => {
+                    setNodes(cloneset(nodes, [nodeno, "inputs", inno, "value"], value));
                 }} />
             <div style={{
                 position: "absolute",

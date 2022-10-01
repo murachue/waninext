@@ -27,10 +27,11 @@ const TmplNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cla
         <SoundNode
             className={className}
             style={{ ...(style || {}), boxShadow: preview ? "0 5px 5px black" : undefined }}
-            index={"x" /* dummy */}
+            index={999 /* dummy FIXME */}
             state={state}
             plugHandlers={{ dragstart: () => "" }}
-            plugStateTuple={[{ from: null, to: null }, () => { }]} />
+            plugStateTuple={[{ from: null, to: null }, () => { }]}
+            onChange={() => { /* ignore */ }} />
     </div>;
 };
 

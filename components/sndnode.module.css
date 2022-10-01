@@ -23,6 +23,35 @@
     margin: 0 10px;
 }
 
+.inputbox {
+    flex: 1;
+    margin: 2px 5px;
+    border: 1px solid gray;
+    border-radius: 14px;
+    padding: 0 4px;
+    background: #bbb;
+}
+
+.inputbox label {
+    display: flex;
+}
+
+.inputbox input {
+    flex: 1;
+    /* flex + width = at-least */
+    width: 4em;
+    border: none;
+    border-bottom: 1px solid black;
+    background: transparent;
+}
+
+.inputbox select {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid black;
+    background: transparent;
+}
+
 .plug {
     --width: 15px;
     --overwrap: 5px;
@@ -57,4 +86,8 @@
     margin-left: calc(-1 * var(--width));
     position: relative;
     left: calc(var(--width) - var(--overwrap));
+}
+
+.output .label {
+    text-align: right;
 }

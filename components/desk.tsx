@@ -13,7 +13,8 @@ const Desk: FunctionComponent<{
     onnodemove: (i: number, x: number, y: number) => void;
     onrewire: (from: InConnection | null, to: InConnection) => void;
     onnoderemove: (i: number) => void;
-}> = ({ nodes, nodeposs, onnodeadd, onnodemove, onrewire, onnoderemove }) => {
+    onchange: (nodeno: number, inno: number, value: string) => void;
+}> = ({ nodes, nodeposs, onnodeadd, onnodemove, onrewire, onnoderemove, onchange }) => {
     const [previewLink, setPreviewLink] = useState<Setting[]>([]);
     const allLinks = [
         ...useMemo(() => stateToBezierLinks(nodes).map(e => ({ ...e, class: style.blueLine })), [nodes]),
@@ -120,7 +121,8 @@ const Desk: FunctionComponent<{
                     state={node}
                     plugHandlers={plugHandlers}
                     plugStateTuple={plugStateTuple}
-                    dragend={(e, x, y, setStyle) => { onnodemove(i, x, y); }} />
+                    dragend={(e, x, y, setStyle) => { onnodemove(i, x, y); }}
+                    onChange={({ nodeNo, inNo }, value) => { onchange(nodeNo, inNo, value); }} />
                 // </div>
             )}
             <div id={previewid} style={draggingStyle} />
