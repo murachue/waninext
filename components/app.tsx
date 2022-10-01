@@ -80,10 +80,16 @@ const App = () => {
             node.type.inputs.forEach((inty, iinput) => {
                 const nin = node.inputs[iinput];
                 const cfrom = nin.connectFrom;
+                const wain = wanodes[inode];
                 if (!cfrom) {
+                    const inslot = (wain as any)[inty.param || inty.name];
+                    if (inslot instanceof AudioParam) {
+                        inslot.value = parseFloat(nin.value!.toString());
+                    } else if (inslot) {
+                        (wain as any)[inty.param || inty.name] = nin.value!;
+                    }
                     return;
                 }
-                const wain = wanodes[inode];
                 // const out = nodes[cfrom.nodeNo].type.outputs[cfrom.outNo];
                 // TODO: output other than node itself? ChannelSplitter or AudioWorklet
                 // following code confuses overload of connect()
@@ -95,7 +101,9 @@ const App = () => {
                     wanodes[cfrom.nodeNo].connect(wain);
                 } else {
                     const inap = (wain as any)[inty.param || inty.name] as AudioParam | undefined;
-                    wanodes[cfrom.nodeNo].connect(wain);
+                    if (inap) {
+                        wanodes[cfrom.nodeNo].connect(inap);
+                    }
                 }
             });
         });
