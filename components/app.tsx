@@ -150,15 +150,11 @@ const App = () => {
                 display: "flex",
                 flexDirection: "row",
             }}>
-                <div className={style.tmplmarginer}>
-                    <TmplNode state={newState("output")} />
-                </div>
-                <div className={style.tmplmarginer}>
-                    <TmplNode state={newState("oscillator")} />
-                </div>
-                <div className={style.tmplmarginer}>
-                    <TmplNode state={newState("biquad")} />
-                </div>
+                {NodeTypes.map(ty =>
+                    <div key={ty.type} className={style.tmplmarginer}>
+                        <TmplNode state={newState(ty.type)} />
+                    </div>
+                )}
             </div>
             <DraggingPreview />
         </DndProvider>
