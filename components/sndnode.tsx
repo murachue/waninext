@@ -5,7 +5,7 @@ import { NodeState, PinType } from "./state";
 
 const ConnectSlot: FunctionComponent<{ pin: PinType; }> = ({ pin }) => <div className={styles.label}>{pin.name}</div>;
 
-const ConstSlot: FunctionComponent<{
+const ParamSlot: FunctionComponent<{
     pin: PinType;
     value: string | number;
     onChange: (value: string) => void;
@@ -30,10 +30,10 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
         <div className={styles.title}>{state.type.type}</div>
         {state.type.inputs.map((pin, i) =>
             <div key={pin.name} className={styles.input}>
-                <Plug id={`n${index}i${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
+                {pin.type === "scalar" ? null : <Plug id={`n${index}i${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />}
                 {pin.type === "channels"
                     ? <ConnectSlot pin={pin} />
-                    : <ConstSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
+                    : <ParamSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
             </div>)}
         {/* <div style={{ padding: "5px 5px" }}>test</div> */}
         {state.type.outputs.map((pin, i) =>

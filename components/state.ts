@@ -4,7 +4,7 @@ export type PinType = {
     name: string;
     param?: string | null;
     unit?: string;
-    type: "channels" | "param" | "string";
+    type: "channels" | "param" | "scalar";
     choice?: string[];
     default?: string;
 };
@@ -26,7 +26,7 @@ export const NodeTypes: NodeType[] = [
         type: "oscillator",
         inputs: [
             { name: "freq", param: "frequency", type: "param", default: "440", unit: "Hz" },
-            { name: "type", type: "string", choice: ["sine", "square", "sawtooth", "triangle", "custom"] },
+            { name: "type", type: "scalar", choice: ["sine", "square", "sawtooth", "triangle", "custom"] },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new OscillatorNode(ctx),
@@ -47,7 +47,7 @@ export const NodeTypes: NodeType[] = [
             { name: "freq", param: "frequency", type: "param", default: "8000", unit: "Hz" },
             { name: "q", param: "Q", type: "param", default: "0" },
             { name: "gain", type: "param", default: "1" },
-            { name: "type", type: "string", choice: ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass"] },
+            { name: "type", type: "scalar", choice: ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass"] },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new BiquadFilterNode(ctx),
@@ -159,11 +159,9 @@ export const newState: (typename: string) => NodeState = typename => {
                 ? { connectFrom: null, value: null }
                 : e.choice
                     ? { connectFrom: null, value: e.default ?? e.choice[0] }
-                    : e.type === "param"
+                    : e.type === "param" || e.type === "scalar"
                         ? { connectFrom: null, value: e.default ?? null }
-                        : e.type === "string"
-                            ? { connectFrom: null, value: e.default ?? null }
-                            : { connectFrom: null, value: null }),
+                        : { connectFrom: null, value: null }),
         invalid: false,
     };
 };
