@@ -75,6 +75,7 @@ type ConnectedInput = Input & { connectFrom: NonNullable<Input["connectFrom"]>; 
 export type NodeState = {
     type: NodeType;  /* referencing shared NodeTypes[number] */
     inputs: Input[];
+    invalid: boolean;
 };
 
 export const INPUT = "i", OUTPUT = "o";
@@ -128,5 +129,6 @@ export const newState: (typename: string) => NodeState = typename => {
                         : e.type === "string"
                             ? { connectFrom: null, value: e.default ?? null }
                             : { connectFrom: null, value: null }),
+        invalid: false,
     };
 };

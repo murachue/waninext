@@ -9,6 +9,10 @@
     min-height: 80px;
 }
 
+.base.error {
+    background: #c88;
+}
+
 .title {
     background: #666;
     color: #fff;

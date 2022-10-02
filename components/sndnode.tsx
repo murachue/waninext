@@ -25,12 +25,12 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
     plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
     onChange: (target: { state: NodeState, nodeNo: number, inNo: number; }, value: string) => void;
 }> = ({ className, style, index, state, plugHandlers, plugStateTuple, onChange }) => {
-    return <div className={`${styles.base} ${className}`} style={style}>
+    return <div className={`${styles.base} ${state.invalid ? styles.error : ""} ${className || ""}`} style={style}>
         <div className={styles.title}>{state.type.type}</div>
         {state.type.inputs.map((pin, i) =>
             <div key={pin.name} className={styles.input}>
                 <Plug id={`n${index}i${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
-                {pin.type === "channels" || state.inputs[i].connectFrom
+                {pin.type === "channels"
                     ? <ConnectSlot pin={pin} />
                     : <ConstSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
             </div>)}
