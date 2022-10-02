@@ -95,3 +95,20 @@
 .output .label {
     text-align: right;
 }
+
+.remove {
+    position: absolute;
+    top: -0.5em;
+    right: -0.5em;
+    width: 1em;
+    height: 1em;
+    border: 1px solid #888;
+    border-radius: 10px;
+    background: #ccc;
+}
+
+.remove::after {
+    content: "\00d7";
+    display: block;
+    text-align: center;
+}

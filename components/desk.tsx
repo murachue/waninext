@@ -122,7 +122,8 @@ const Desk: FunctionComponent<{
                     plugHandlers={plugHandlers}
                     plugStateTuple={plugStateTuple}
                     dragend={(e, x, y, setStyle) => { onnodemove(i, x, y); }}
-                    onChange={({ nodeNo, inNo }, value) => { onchange(nodeNo, inNo, value); }} />
+                    onChange={({ nodeNo, inNo }, value) => { onchange(nodeNo, inNo, value); }}
+                    onRemove={i => { onnoderemove(i); }} />
                 // </div>
             )}
             <div id={previewid} style={draggingStyle} />

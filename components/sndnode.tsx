@@ -24,7 +24,8 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
     plugHandlers: Parameters<typeof Plug>[0]["handlers"];
     plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
     onChange: (target: { state: NodeState, nodeNo: number, inNo: number; }, value: string) => void;
-}> = ({ className, style, index, state, plugHandlers, plugStateTuple, onChange }) => {
+    onRemove?: (target: number) => void;
+}> = ({ className, style, index, state, plugHandlers, plugStateTuple, onChange, onRemove }) => {
     return <div className={`${styles.base} ${state.invalid ? styles.error : ""} ${className || ""}`} style={style}>
         <div className={styles.title}>{state.type.type}</div>
         {state.type.inputs.map((pin, i) =>
@@ -42,7 +43,8 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
                 </div>
                 <Plug id={`n${index}o${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
             </div>)}
-    </div>;
+        {onRemove && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
+    </div >;
 };
 
 export default SoundNode;

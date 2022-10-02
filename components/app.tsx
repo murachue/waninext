@@ -59,6 +59,7 @@ const App = () => {
                 if (save) {
                     return JSON.parse(save) as Save;
                 }
+
                 // default
                 return {
                     nodes: [
@@ -182,14 +183,26 @@ const App = () => {
                 onrewire={(from, to) => {
                     setNodes(cloneset(nodes, [to.nodeNo, "inputs", to.outNo, "connectFrom"], from));
                 }}
-                onnoderemove={(i) => {
-                    setNodes(clonesplice1(nodes, i));
-                    setNodeposs(clonesplice1(nodeposs, i));
-                }}
                 onchange={(nodeno, inno, value) => {
                     setNodes(cloneset(cloneset(nodes,
                         [nodeno, "inputs", inno, "value"], value),
                         [nodeno, "invalid"], false));
+                }}
+                onnoderemove={(i) => {
+                    setNodes(clonesplice1(nodes, i).map(node => ({
+                        ...node,
+                        inputs: node.inputs.map(inp => ({
+                            ...inp, connectFrom: !inp.connectFrom
+                                ? null
+                                : inp.connectFrom.nodeNo === i
+                                    ? null
+                                    : {
+                                        ...inp.connectFrom,
+                                        nodeNo: inp.connectFrom.nodeNo - (i <= inp.connectFrom.nodeNo ? 1 : 0),
+                                    }
+                        }))
+                    })));
+                    setNodeposs(clonesplice1(nodeposs, i));
                 }} />
                 <div style={{
                     position: "absolute",
