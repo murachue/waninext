@@ -189,7 +189,7 @@ const App = () => {
                     display: "flex",
                     flexDirection: "row",
                 }}>
-                    {NodeTypes.map(ty =>
+                    {NodeTypes.filter(ty => ty.type !== "output").map(ty =>
                         <div key={ty.type} className={style.tmplmarginer}>
                             <TmplNode state={newState(ty.type)} />
                         </div>

@@ -43,7 +43,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
                 </div>
                 <Plug id={`n${index}o${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
             </div>)}
-        {onRemove && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
+        {onRemove && state.type.type !== "output" && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
     </div >;
 };
 
