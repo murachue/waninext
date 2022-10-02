@@ -2,12 +2,19 @@ import { Children, cloneElement, Dispatch, FunctionComponent, isValidElement, Pr
 
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
+type Style = {
+    left?: string;
+    top?: string;
+    position: string;
+    userSelect: string;
+};
+
 const Draggable: FunctionComponent<PropsWithChildren<{
     dontcramp?: boolean;
     dragstart?: (e: HTMLElement, x: number, y: number) => void;
-    dragend?: (e: HTMLElement, x: number, y: number, setStyle: Dispatch<SetStateAction<any>>) => void;
+    dragend?: (e: HTMLElement, x: number, y: number, setStyle: Dispatch<SetStateAction<Style>>) => void;
 }>> = ({ dontcramp, dragstart: dragstart = () => { }, dragend: dragend = () => { }, children }) => {
-    const [style, setStyle] = useState<{ left?: string, top?: string, position: string, userSelect: string; }>({
+    const [style, setStyle] = useState<Style>({
         // left: "0px",
         // top: "0px",
         position: "absolute",
@@ -20,16 +27,21 @@ const Draggable: FunctionComponent<PropsWithChildren<{
         const target: HTMLElement = e.currentTarget! as HTMLElement;
         const posT = target.getBoundingClientRect();
         const posP = target.parentElement!.getBoundingClientRect();
-        const cxy = ("touches" in e ? e.touches[0] : e);
+        const cxy = "touches" in e ? e.touches[0] : e;
         const shiftX = cxy.clientX - posT.x;  // this should not offset(parent-relative) but client-pos(client-relative)
         const shiftY = cxy.clientY - posT.y;  // ditto
 
-        const onmousemove = (e: MouseEvent | TouchEvent) => {
-            const cxy = ("touches" in e ? e.touches[0] : e);
-            const rawx = Math.round(cxy.clientX - shiftX - posP.x);
-            const rawy = Math.round(cxy.clientY - shiftY - posP.y);
+        const pointer2tl = (cx: number, cy: number) => {
+            const rawx = Math.round(cx - shiftX - posP.x);
+            const rawy = Math.round(cy - shiftY - posP.y);
             const x = dontcramp ? rawx : clamp(rawx, 0, posP.width - posT.width);
             const y = dontcramp ? rawy : clamp(rawy, 0, posP.height - posT.height);
+            return { x, y };
+        };
+
+        const onmousemove = (e: MouseEvent | TouchEvent) => {
+            const cxy = "touches" in e ? e.touches[0] : e;
+            const { x, y } = pointer2tl(cxy.clientX, cxy.clientY);
 
             setStyle({
                 ...style,
@@ -45,7 +57,8 @@ const Draggable: FunctionComponent<PropsWithChildren<{
             document.removeEventListener("touchend", onmouseup);
 
             const cxy = "touches" in e ? e.touches[0] : e;
-            dragendref.current(e.currentTarget! as HTMLElement, cxy.clientX, cxy.clientY, setStyle);
+            const { x, y } = pointer2tl(cxy.clientX, cxy.clientY);
+            dragendref.current(e.currentTarget! as HTMLElement, x, y, setStyle);
         };
 
         document.addEventListener("mousemove", onmousemove);
@@ -53,7 +66,8 @@ const Draggable: FunctionComponent<PropsWithChildren<{
         document.addEventListener("mouseup", onmouseup);
         document.addEventListener("touchend", onmouseup);
 
-        dragstart(target, cxy.clientX, cxy.clientY);
+        const { x, y } = pointer2tl(cxy.clientX, cxy.clientY);
+        dragstart(target, x, y);
 
         e.stopPropagation();
     }, [dragstart, dragendref, dontcramp, style]);

@@ -5,6 +5,7 @@ import Bezier, { Setting } from './bezier';
 import InstNode from "./instnode";
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
 import { genPlugId, InConnection, NodeState, parseInputPlugId, parseOutputPlugId, stateToBezierLinks } from "./state";
+import { cloneunset } from "./util";
 
 const Desk: FunctionComponent<{
     nodes: NodeState[];
@@ -121,7 +122,10 @@ const Desk: FunctionComponent<{
                     state={node}
                     plugHandlers={plugHandlers}
                     plugStateTuple={plugStateTuple}
-                    dragend={(e, x, y, setStyle) => { onnodemove(i, x, y); }}
+                    dragend={(e, x, y, setStyle) => {
+                        setStyle(style => cloneunset(style, ["left", "top"]));
+                        onnodemove(i, x, y);
+                    }}
                     onChange={({ nodeNo, inNo }, value) => { onchange(nodeNo, inNo, value); }}
                     onRemove={i => { onnoderemove(i); }} />
                 // </div>
