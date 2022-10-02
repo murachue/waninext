@@ -62,7 +62,7 @@ export const NodeTypes: NodeType[] = [
         make: ctx => new DelayNode(ctx),
     },
     {
-        type: "dynamicCompressor",
+        type: "compressor",
         inputs: [
             { name: "sound", type: "channels" },
             { name: "threshold", type: "param", default: "-24", unit: "dB" },
@@ -75,7 +75,7 @@ export const NodeTypes: NodeType[] = [
         make: ctx => new DynamicsCompressorNode(ctx),
     },
     {
-        type: "stereoPanner",
+        type: "panner",
         inputs: [
             { name: "sound", type: "channels" },
             { name: "pan", type: "param", default: "0", unit: "right" },
