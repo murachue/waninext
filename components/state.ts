@@ -28,9 +28,7 @@ export const NodeTypes: NodeType[] = [
             { name: "freq", param: "frequency", type: "param", default: "440", unit: "Hz" },
             { name: "type", type: "string", choice: ["sine", "square", "sawtooth", "triangle", "custom"] },
         ],
-        outputs: [
-            { name: "sound", param: null, type: "channels" },
-        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new OscillatorNode(ctx),
     },
     {
@@ -39,9 +37,7 @@ export const NodeTypes: NodeType[] = [
             { name: "sound", type: "channels" },
             { name: "gain", type: "param", default: "1" },
         ],
-        outputs: [
-            { name: "sound", param: null, type: "channels" },
-        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new GainNode(ctx),
     },
     {
@@ -53,10 +49,49 @@ export const NodeTypes: NodeType[] = [
             { name: "gain", type: "param", default: "1" },
             { name: "type", type: "string", choice: ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass"] },
         ],
-        outputs: [
-            { name: "sound", param: null, type: "channels" },
-        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new BiquadFilterNode(ctx),
+    },
+    {
+        type: "delay",
+        inputs: [
+            { name: "sound", type: "channels" },
+            { name: "time", param: "delayTime", type: "param", default: "1", unit: "sec" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
+        make: ctx => new DelayNode(ctx),
+    },
+    {
+        type: "dynamicCompressor",
+        inputs: [
+            { name: "sound", type: "channels" },
+            { name: "threshold", type: "param", default: "-24", unit: "dB" },
+            { name: "knee", type: "param", default: "30", unit: "dB" },
+            { name: "ratio", type: "param", default: "12", unit: "dB" },
+            { name: "attack", type: "param", default: "0.003", unit: "sec" },
+            { name: "release", type: "param", default: "0.25", unit: "sec" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
+        make: ctx => new DynamicsCompressorNode(ctx),
+    },
+    {
+        type: "stereoPanner",
+        inputs: [
+            { name: "sound", type: "channels" },
+            { name: "pan", type: "param", default: "0", unit: "right" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
+        make: ctx => new StereoPannerNode(ctx),
+    },
+    // pseudo WebAudio node for more pure...
+    {
+        type: "add",
+        inputs: [
+            { name: "sound", type: "channels" },
+            { name: "sound", type: "channels" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
+        make: (ctx) => new GainNode(ctx),
     },
 ];
 
