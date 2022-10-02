@@ -29,7 +29,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
     return <div className={`${styles.base} ${state.invalid ? styles.error : ""} ${className || ""}`} style={style}>
         <div className={styles.title}>{state.type.type}</div>
         {state.type.inputs.map((pin, i) =>
-            <div key={pin.name} className={styles.input}>
+            <div key={i} className={styles.input}>
                 {pin.type === "scalar" ? null : <Plug id={`n${index}i${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />}
                 {pin.type === "channels"
                     ? <ConnectSlot pin={pin} />
@@ -37,7 +37,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
             </div>)}
         {/* <div style={{ padding: "5px 5px" }}>test</div> */}
         {state.type.outputs.map((pin, i) =>
-            <div key={pin.name} className={styles.output}>
+            <div key={i} className={styles.output}>
                 <div className={styles.label}>
                     {pin.name}
                 </div>
