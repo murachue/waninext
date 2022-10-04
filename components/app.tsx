@@ -42,7 +42,7 @@ const App = () => {
                                 type: "oscillator",
                                 inputs: [
                                     { connectFrom: null, value: 440 },
-                                    { connectFrom: null, value: "sin" },
+                                    { connectFrom: null, value: "sine" },
                                 ],
                             },
                             nodepos: { x: 30, y: 230 },
