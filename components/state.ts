@@ -10,20 +10,17 @@ export type PinType = {
 };
 
 export type NodeType = {
-    type: string;
     inputs: PinType[];
     outputs: PinType[];
     make: (ctx: AudioContext) => AudioNode;
 };
-export const NodeTypes: NodeType[] = [
-    {
-        type: "output",
+export const NodeTypes: Record<string, NodeType> = {
+    "output": {
         inputs: [{ name: "sound", param: null, type: "channels" }],
         outputs: [],
         make: (ctx) => ctx.destination,
     },
-    {
-        type: "oscillator",
+    "oscillator": {
         inputs: [
             { name: "freq", param: "frequency", type: "param", default: "440", unit: "Hz" },
             { name: "type", type: "scalar", choice: ["sine", "square", "sawtooth", "triangle", "custom"] },
@@ -31,8 +28,25 @@ export const NodeTypes: NodeType[] = [
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new OscillatorNode(ctx),
     },
-    {
-        type: "gain",
+    /* "buffer": {
+        inputs: [
+            { name: "freq", param: "frequency", type: "param", default: "440", unit: "Hz" },
+        ],
+        outputs: [{ name: "buffer", param: null, type: "buffer" },],
+        make: (ctx) => new AudioBuffer(),
+    },
+    "sampler": {
+        inputs: [
+            { name: "buffer", type: "buffer" },
+            { name: "loop", type: "param", default: false, choice: [false, true] },
+            { name: "loopStart", type: "param", default: "0", unit: "sec" },
+            { name: "loopEnd", type: "param", default: "0", unit: "sec" },
+            { name: "rate", param: "playbackRate", type: "param", default: "1" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" }],
+        make: ctx => new AudioBufferSourceNode(ctx),
+    }, */
+    "gain": {
         inputs: [
             { name: "sound", type: "channels" },
             { name: "gain", type: "param", default: "1" },
@@ -40,8 +54,7 @@ export const NodeTypes: NodeType[] = [
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new GainNode(ctx),
     },
-    {
-        type: "biquad",
+    "biquad": {
         inputs: [
             { name: "sound", type: "channels" },
             { name: "freq", param: "frequency", type: "param", default: "8000", unit: "Hz" },
@@ -52,8 +65,7 @@ export const NodeTypes: NodeType[] = [
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new BiquadFilterNode(ctx),
     },
-    {
-        type: "delay",
+    "delay": {
         inputs: [
             { name: "sound", type: "channels" },
             { name: "time", param: "delayTime", type: "param", default: "1", unit: "sec" },
@@ -61,8 +73,7 @@ export const NodeTypes: NodeType[] = [
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: ctx => new DelayNode(ctx),
     },
-    {
-        type: "compressor",
+    "compressor": {
         inputs: [
             { name: "sound", type: "channels" },
             { name: "threshold", type: "param", default: "-24", unit: "dB" },
@@ -74,8 +85,7 @@ export const NodeTypes: NodeType[] = [
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: ctx => new DynamicsCompressorNode(ctx),
     },
-    {
-        type: "panner",
+    "panner": {
         inputs: [
             { name: "sound", type: "channels" },
             { name: "pan", type: "param", default: "0", unit: "right" },
@@ -84,8 +94,7 @@ export const NodeTypes: NodeType[] = [
         make: ctx => new StereoPannerNode(ctx),
     },
     // pseudo WebAudio node for more pure...
-    {
-        type: "add",
+    "add": {
         inputs: [
             { name: "sound", type: "channels" },
             { name: "sound", type: "channels" },
@@ -93,7 +102,7 @@ export const NodeTypes: NodeType[] = [
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new GainNode(ctx),
     },
-];
+};
 
 export type InConnection = {
     nodeNo: number;
@@ -108,7 +117,7 @@ export type Input = {
 type ConnectedInput = Input & { connectFrom: NonNullable<Input["connectFrom"]>; };
 
 export type NodeState = {
-    type: NodeType;  /* referencing shared NodeTypes[number] */
+    type: string;
     inputs: Input[];
     invalid: boolean;
 };
@@ -148,12 +157,12 @@ export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
                 })));
 
 export const newState: (typename: string) => NodeState = typename => {
-    const type = NodeTypes.find(e => e.type === typename);
+    const type = NodeTypes[typename];
     if (!type) {
         throw new Error(`unknown NodeType ${typename}`);
     }
     return {
-        type,
+        type: typename,
         inputs: type.inputs.map(e =>
             e.type === "channels"
                 ? { connectFrom: null, value: null }

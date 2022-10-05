@@ -1,7 +1,7 @@
 import { FunctionComponent, HTMLAttributes } from "react";
 import styles from "./sndnode.module.css";
 import Plug from "./plug";
-import { NodeState, PinType } from "./state";
+import { NodeState, NodeTypes, PinType } from "./state";
 
 const ConnectSlot: FunctionComponent<{ pin: PinType; }> = ({ pin }) => <div className={styles.label}>{pin.name}</div>;
 
@@ -27,8 +27,8 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
     onRemove?: (target: number) => void;
 }> = ({ className, style, index, state, plugHandlers, plugStateTuple, onChange, onRemove }) => {
     return <div className={`${styles.base} ${state.invalid ? styles.error : ""} ${className || ""}`} style={style}>
-        <div className={styles.title}>{state.type.type}</div>
-        {state.type.inputs.map((pin, i) =>
+        <div className={styles.title}>{state.type}</div>
+        {NodeTypes[state.type].inputs.map((pin, i) =>
             <div key={i} className={styles.input}>
                 {pin.type === "scalar" ? null : <Plug id={`n${index}i${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />}
                 {pin.type === "channels"
@@ -36,14 +36,14 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
                     : <ParamSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
             </div>)}
         {/* <div style={{ padding: "5px 5px" }}>test</div> */}
-        {state.type.outputs.map((pin, i) =>
+        {NodeTypes[state.type].outputs.map((pin, i) =>
             <div key={i} className={styles.output}>
                 <div className={styles.label}>
                     {pin.name}
                 </div>
                 <Plug id={`n${index}o${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
             </div>)}
-        {onRemove && state.type.type !== "output" && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
+        {onRemove && state.type !== "output" && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
     </div >;
 };
 

@@ -69,7 +69,7 @@ const App = () => {
                     ]
                 };
             })();
-            setNodes(save.nodes.map(e => ({ ...e.node, type: NodeTypes.find(ty => ty.type === e.node.type)!, invalid: false })));
+            setNodes(save.nodes.map(e => ({ ...e.node, invalid: false })));
             setNodeposs(save.nodes.map(e => e.nodepos));
         } catch (e) {
             // ignore
@@ -83,7 +83,7 @@ const App = () => {
             return;
         }
         const save: Save = {
-            nodes: nodes.map((node, i) => ({ node: { ...node, type: node.type.type }, nodepos: nodeposs![i] })),
+            nodes: nodes.map((node, i) => ({ node, nodepos: nodeposs![i] })),
         };
         localStorage.setItem("save", JSON.stringify(save));
     }, [nodes, nodeposs]);
@@ -92,13 +92,13 @@ const App = () => {
         if (!nodes) { return; }
         const context = new AudioContext({ sampleRate: 44010 });
 
-        const wanodes = nodes.map(node => node.type.make(context));
+        const wanodes = nodes.map(node => NodeTypes[node.type].make(context));
         nodes.forEach((node, inode) => {
             if (node.invalid) {
                 return;
             }
             try {
-                node.type.inputs.forEach((inty, iinput) => {
+                NodeTypes[node.type].inputs.forEach((inty, iinput) => {
                     const nin = node.inputs[iinput];
                     const cfrom = nin.connectFrom;
                     const wain = wanodes[inode];
@@ -134,7 +134,7 @@ const App = () => {
         });
 
         nodes!.forEach((node, inode) => {
-            if (node.type.type === "oscillator") {
+            if (node.type === "oscillator") {
                 (wanodes[inode] as AudioScheduledSourceNode).start();
             }
         });
@@ -189,9 +189,9 @@ const App = () => {
                     display: "flex",
                     flexDirection: "row",
                 }}>
-                    {NodeTypes.filter(ty => ty.type !== "output").map(ty =>
-                        <div key={ty.type} className={style.tmplmarginer}>
-                            <TmplNode state={newState(ty.type)} />
+                    {Object.entries(NodeTypes).filter(([k, v]) => k !== "output").map(([k, v]) =>
+                        <div key={k} className={style.tmplmarginer}>
+                            <TmplNode state={newState(k)} />
                         </div>
                     )}
                 </div>
