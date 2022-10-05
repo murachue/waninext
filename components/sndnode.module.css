@@ -22,6 +22,12 @@
     padding: 0 10px;
 }
 
+.slot {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
 .label {
     flex: 1;
     margin: 0 10px;
@@ -65,29 +71,16 @@
     border-radius: 10px;
     background: #666;
     border: 1px solid black;
-}
-
-.input {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    /* overwrapping into label to make label spacing common for both input and output. */
+    margin-left: calc(-1 * var(--width));
 }
 
 .input .plug {
-    /* overwrapping into label to make label spacing common for both input and output. */
-    margin-left: calc(-1 * var(--width));
     position: relative;
-    left: 5px;
-}
-
-.output {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    left: var(--overwrap);
 }
 
 .output .plug {
-    margin-left: calc(-1 * var(--width));
     position: relative;
     left: calc(var(--width) - var(--overwrap));
 }
