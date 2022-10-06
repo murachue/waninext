@@ -1,7 +1,7 @@
 import { FunctionComponent, HTMLAttributes } from "react";
-import styles from "./sndnode.module.css";
 import Plug from "./plug";
-import { NodeState, NodeTypes, PinType } from "./state";
+import styles from "./sndnode.module.css";
+import { genPlugId, INPUT, NodeState, NodeTypes, OUTPUT, PinType } from "./state";
 
 const ConnectSlot: FunctionComponent<{ pin: PinType; }> = ({ pin }) => <div className={styles.label}>{pin.name}</div>;
 
@@ -30,7 +30,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
         <div className={styles.title}>{state.type}</div>
         {NodeTypes[state.type].inputs.map((pin, i) =>
             <div key={i} className={`${styles.slot} ${styles.input}`}>
-                {pin.type === "scalar" ? null : <Plug id={`n${index}i${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />}
+                {pin.type === "scalar" ? null : <Plug id={genPlugId(index, INPUT, i, NodeTypes[state.type].inputs[i].type)} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />}
                 {pin.type === "channels"
                     ? <ConnectSlot pin={pin} />
                     : <ParamSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
@@ -41,7 +41,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
                 <div className={styles.label}>
                     {pin.name}
                 </div>
-                <Plug id={`n${index}o${i}`} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
+                <Plug id={genPlugId(index, OUTPUT, i, NodeTypes[state.type].outputs[i].type)} className={styles.plug} handlers={plugHandlers} stateTuple={plugStateTuple} />
             </div>)}
         {onRemove && state.type !== "output" && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
     </div >;

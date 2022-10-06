@@ -4,7 +4,7 @@ import style from "./app.module.css";
 import Bezier, { Setting } from './bezier';
 import InstNode from "./instnode";
 import { defaultPlugState, Linking, PlugHandlers, PlugState } from './plug';
-import { genPlugId, InConnection, NodeState, parseInputPlugId, parseOutputPlugId, stateToBezierLinks } from "./state";
+import { genPlugId, PinLocation, NodeState, NodeTypes, parseInputPlugId, parseOutputPlugId, stateToBezierLinks } from "./state";
 import { cloneunset } from "./util";
 
 const Desk: FunctionComponent<{
@@ -12,7 +12,7 @@ const Desk: FunctionComponent<{
     nodeposs: XYCoord[];
     onnodeadd: (node: NodeState, xy: XYCoord) => void;
     onnodemove: (i: number, x: number, y: number) => void;
-    onrewire: (from: InConnection | null, to: InConnection) => void;
+    onrewire: (from: PinLocation | null, to: PinLocation) => void;
     onnoderemove: (i: number) => void;
     onchange: (nodeno: number, inno: number, value: string) => void;
 }> = ({ nodes, nodeposs, onnodeadd, onnodemove, onrewire, onnoderemove, onchange }) => {
@@ -33,7 +33,7 @@ const Desk: FunctionComponent<{
         let overridelink: string | undefined = undefined;
         const ink = parseInputPlugId(from);
         if (ink) {
-            const connFrom = nodes[ink.nodeNo].inputs[ink.outNo].connectFrom;
+            const connFrom = nodes[ink.nodeNo].inputs[ink.pinNo].connectFrom;
             if (!connFrom) {
                 // not connected input: abort, do nothing.
                 return "";
@@ -41,7 +41,7 @@ const Desk: FunctionComponent<{
 
             // unlink and takeover that output
             onrewire(null, ink);
-            overridelink = genPlugId(connFrom.nodeNo, "o", connFrom.outNo);
+            overridelink = genPlugId(connFrom.nodeNo, "o", connFrom.pinNo, NodeTypes[nodes[connFrom.nodeNo].type].outputs[connFrom.pinNo].type);
         }
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, display: "block", left: `${x}px`, top: `${y}px` }));
         setPreviewLink([{
@@ -51,7 +51,7 @@ const Desk: FunctionComponent<{
             class: `${style.blueLine} ${style.dash}`,
         }]);
         return overridelink;
-    }, [nodes]);
+    }, [nodes, onrewire]);
     const dragmove = useCallback((x: number, y: number): void => {
         setDraggingStyle(draggingStyle => ({ ...draggingStyle, left: `${x}px`, top: `${y}px` }));
     }, []);
@@ -70,16 +70,27 @@ const Desk: FunctionComponent<{
         if (!tlink) {
             return;
         }
+        if (flink.type !== tlink.type) {
+            return;
+        }
 
-        onrewire({ nodeNo: flink.nodeNo, outNo: flink.outNo }, tlink);
-    }, [nodes]);
-    const linkpreview = useCallback((from: string, to: string): void => {
-        if (!parseInputPlugId(to)) {
+        onrewire({ nodeNo: flink.nodeNo, pinNo: flink.pinNo }, tlink);
+    }, [onrewire]);
+    const linkpreview = useCallback((fromid: string, toid: string): void => {
+        const from = parseOutputPlugId(fromid);
+        if (!from) {
+            return;
+        }
+        const to = parseInputPlugId(toid);
+        if (!to) {
+            return;
+        }
+        if (from.type !== to.type) {
             return;
         }
         setPreviewLink([{
-            from,
-            to,
+            from: fromid,
+            to: toid,
             positions: { start: { side: "right" }, end: { side: "left" } },
             class: `${style.blueLine}`,
         }]);

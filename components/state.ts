@@ -4,7 +4,7 @@ export type PinType = {
     name: string;
     param?: string | null;
     unit?: string;
-    type: "channels" | "param" | "scalar";
+    type: "channels" | "param" | "scalar" | "buffer";
     choice?: string[];
     default?: string;
 };
@@ -104,13 +104,13 @@ export const NodeTypes: Record<string, NodeType> = {
     },
 };
 
-export type InConnection = {
+export type PinLocation = {
     nodeNo: number;
-    outNo: number;
+    pinNo: number;
 };
 
 export type Input = {
-    connectFrom: InConnection | null /* null: not connected */;
+    connectFrom: PinLocation | null /* null: not connected */;
     value: number | string | null /* null is only for connect-only */;
 };
 
@@ -123,22 +123,25 @@ export type NodeState = {
 };
 
 export const INPUT = "i", OUTPUT = "o";
-export const genPlugId = (nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number) => `n${nodeNo}${io}${pinNo}`;
+export const genPlugId = (nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number, type: NodeType["inputs"][number]["type"]) => {
+    const ty = type === "buffer" ? "b" : "c"; // no "param"
+    return `n${nodeNo}${io}${pinNo}${ty}`;
+};
 export const parseInputPlugId = (id: string) => {
-    const match = /^n([0-9]+)i([0-9]+)$/.exec(id);
+    const match = /^n([0-9]+)i([0-9]+)([a-z])$/.exec(id);
     if (!match) {
         return null;
     }
 
-    return { nodeNo: parseInt(match[1]), outNo: parseInt(match[2]) };
+    return { nodeNo: parseInt(match[1]), pinNo: parseInt(match[2]), type: match[3] };
 };
 export const parseOutputPlugId = (id: string) => {
-    const match = /^n([0-9]+)o([0-9]+)$/.exec(id);
+    const match = /^n([0-9]+)o([0-9]+)([a-z])$/.exec(id);
     if (!match) {
         return null;
     }
 
-    return { nodeNo: parseInt(match[1]), outNo: parseInt(match[2]) };
+    return { nodeNo: parseInt(match[1]), pinNo: parseInt(match[2]), type: match[3] };
 };
 
 export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
@@ -148,8 +151,8 @@ export const stateToBezierLinks: (state: NodeState[]) => Setting[] =
             .filter((ci): ci is [ConnectedInput, number] => !!ci[0].connectFrom)
             .map/* <Setting> */(
                 ([input, iinput]) => ({
-                    from: genPlugId(input.connectFrom.nodeNo, OUTPUT, input.connectFrom.outNo),
-                    to: genPlugId(inode, INPUT, iinput),
+                    from: genPlugId(input.connectFrom.nodeNo, OUTPUT, input.connectFrom.pinNo, NodeTypes[state[input.connectFrom.nodeNo].type].outputs[input.connectFrom.pinNo].type),
+                    to: genPlugId(inode, INPUT, iinput, NodeTypes[node.type].inputs[iinput].type),
                     positions: {
                         start: { side: "right" },
                         end: { side: "left" },

@@ -51,7 +51,7 @@ const App = () => {
                             node: {
                                 type: "gain",
                                 inputs: [
-                                    { connectFrom: { nodeNo: 0, outNo: 0 }, value: null },
+                                    { connectFrom: { nodeNo: 0, pinNo: 0 }, value: null },
                                     { connectFrom: null, value: "0.2" },
                                 ],
                             },
@@ -61,7 +61,7 @@ const App = () => {
                             node: {
                                 type: "output",
                                 inputs: [
-                                    { connectFrom: { nodeNo: 1, outNo: 0 }, value: null },
+                                    { connectFrom: { nodeNo: 1, pinNo: 0 }, value: null },
                                 ],
                             },
                             nodepos: { x: 330, y: 250 },
@@ -103,7 +103,7 @@ const App = () => {
                     const cfrom = nin.connectFrom;
                     const wain = wanodes[inode];
                     if (cfrom) {
-                        // const out = nodes[cfrom.nodeNo].type.outputs[cfrom.outNo];
+                        // const out = nodes[cfrom.nodeNo].type.outputs[cfrom.pinNo];
                         // TODO: output other than node itself? ChannelSplitter or AudioWorklet
                         // following code confuses overload of connect()
                         // const inap = inty.type === "channels" ? wain : ((wain as any)[inty.param || inty.name] as AudioParam | undefined);
@@ -155,7 +155,7 @@ const App = () => {
                     setNodeposs(cloneset(nodeposs, [i], { x, y }));
                 }}
                 onrewire={(from, to) => {
-                    setNodes(cloneset(nodes, [to.nodeNo, "inputs", to.outNo, "connectFrom"], from));
+                    setNodes(cloneset(nodes, [to.nodeNo, "inputs", to.pinNo, "connectFrom"], from));
                 }}
                 onchange={(nodeno, inno, value) => {
                     setNodes(cloneset(cloneset(nodes,
