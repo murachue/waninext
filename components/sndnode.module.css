@@ -69,10 +69,17 @@
     width: var(--width);
     height: 10px;
     border-radius: 10px;
-    background: #666;
     border: 1px solid black;
     /* overwrapping into label to make label spacing common for both input and output. */
     margin-left: calc(-1 * var(--width));
+}
+
+.plugc {
+    background: #cc6;
+}
+
+.plugb {
+    background: #6cc;
 }
 
 .input .plug {

@@ -28,24 +28,22 @@ export const NodeTypes: Record<string, NodeType> = {
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: (ctx) => new OscillatorNode(ctx),
     },
-    /* "buffer": {
-        inputs: [
-            { name: "freq", param: "frequency", type: "param", default: "440", unit: "Hz" },
-        ],
+    "buffer": {
+        inputs: [],
         outputs: [{ name: "buffer", param: null, type: "buffer" },],
-        make: (ctx) => new AudioBuffer(),
+        make: (ctx) => null,
     },
     "sampler": {
         inputs: [
             { name: "buffer", type: "buffer" },
-            { name: "loop", type: "param", default: false, choice: [false, true] },
+            { name: "loop", type: "scalar", default: "false", choice: ["false", "true"] },
             { name: "loopStart", type: "param", default: "0", unit: "sec" },
             { name: "loopEnd", type: "param", default: "0", unit: "sec" },
             { name: "rate", param: "playbackRate", type: "param", default: "1" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" }],
         make: ctx => new AudioBufferSourceNode(ctx),
-    }, */
+    },
     "gain": {
         inputs: [
             { name: "sound", type: "channels" },
@@ -123,9 +121,9 @@ export type NodeState = {
 };
 
 export const INPUT = "i", OUTPUT = "o";
+export const genShortTy = (type: NodeType["inputs"][number]["type"]) => type === "buffer" ? "b" : "c"; // no "param"
 export const genPlugId = (nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number, type: NodeType["inputs"][number]["type"]) => {
-    const ty = type === "buffer" ? "b" : "c"; // no "param"
-    return `n${nodeNo}${io}${pinNo}${ty}`;
+    return `n${nodeNo}${io}${pinNo}${genShortTy(type)}`;
 };
 export const parseInputPlugId = (id: string) => {
     const match = /^n([0-9]+)i([0-9]+)([a-z])$/.exec(id);
