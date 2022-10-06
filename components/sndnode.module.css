@@ -98,6 +98,11 @@
     border: 1px solid #888;
     border-radius: 10px;
     background: #ccc;
+    display: none;
+}
+
+.base:hover .remove {
+    display: block;
 }
 
 .remove::after {
