@@ -32,7 +32,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
         {type.inputs.map((pin, i) =>
             <div key={i} className={`${styles.slot} ${styles.input}`}>
                 {pin.type === "scalar" ? null : <Plug id={genPlugId(index, INPUT, i, type.inputs[i].type)} className={`${styles.plug} ${genShortTy(type.inputs[i].type) === "b" ? styles.plugb : styles.plugc}`} handlers={plugHandlers} stateTuple={plugStateTuple} />}
-                {pin.type === "channels"
+                {pin.type === "channels" || pin.type === "buffer"
                     ? <ConnectSlot pin={pin} />
                     : <ParamSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
             </div>)}

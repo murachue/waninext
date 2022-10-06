@@ -185,7 +185,7 @@ const App = () => {
                     width: "100%",
                     border: "1px solid #ccc",
                     background: "#444c",
-                    overflow: "visible",
+                    overflowX: "auto",
                     display: "flex",
                     flexDirection: "row",
                 }}>
