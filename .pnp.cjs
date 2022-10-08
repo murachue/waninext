@@ -38,6 +38,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/react-dom", "npm:18.0.6"],\
             ["eslint", "npm:8.23.1"],\
             ["eslint-config-next", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:12.3.0"],\
+            ["idb", "npm:7.1.0"],\
             ["next", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:12.3.0"],\
             ["react", "npm:18.2.0"],\
             ["react-dnd", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:16.0.1"],\
@@ -1689,6 +1690,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["idb", [\
+        ["npm:7.1.0", {\
+          "packageLocation": "./.yarn/cache/idb-npm-7.1.0-fcd329313f-1ae62bcf9f.zip/node_modules/idb/",\
+          "packageDependencies": [\
+            ["idb", "npm:7.1.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["ignore", [\
         ["npm:5.2.0", {\
           "packageLocation": "./.yarn/cache/ignore-npm-5.2.0-fc4b58a4f3-6b1f926792.zip/node_modules/ignore/",\
@@ -2979,6 +2989,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/react-dom", "npm:18.0.6"],\
             ["eslint", "npm:8.23.1"],\
             ["eslint-config-next", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:12.3.0"],\
+            ["idb", "npm:7.1.0"],\
             ["next", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:12.3.0"],\
             ["react", "npm:18.2.0"],\
             ["react-dnd", "virtual:1f5fe146e547223836fc1a49ad9f63bf76f8faba25a33eff12048066215cd0b7191656eb7794c4d0eb887af0a7ef358e4518421c55e4cf1af231b0fb4d393cf4#npm:16.0.1"],\

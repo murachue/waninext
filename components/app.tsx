@@ -8,10 +8,33 @@ import DraggingPreview from "./dragpreview";
 import { newState, NodeState, NodeTypes } from "./state";
 import TmplNode from "./tmplnode";
 import { cloneset, clonesplice1 } from "./util";
+import { openDB } from "idb";
 
 type SavedNodeState = Omit<NodeState, "type" | "invalid"> & { type: string; };
 type SavedNode = { node: SavedNodeState, nodepos: XYCoord; };
 type Save = { nodes: SavedNode[]; };
+
+const opendb = async () => await openDB<{
+    save: {
+        key: string /* key */;
+        value: {
+            key: string;
+            value: Save;
+        };
+    };
+    samples: {
+        key: string /* name */;
+        value: {
+            name: string;
+            buffer: Uint8Array;
+        };
+    };
+}>("app", 1, {
+    upgrade: (db, from, to, txn) => {
+        db.createObjectStore("save", { keyPath: "key" });
+        db.createObjectStore("samples", { keyPath: "name" });
+    }
+});
 
 const App = () => {
     const [width, setWidth] = useState(800);
@@ -27,54 +50,58 @@ const App = () => {
 
     // initial load
     useEffect(() => {
-        try {
-            const save = ((): Save => {
-                const save = localStorage.getItem("save");
-                if (save) {
-                    return JSON.parse(save) as Save;
-                }
+        (async () => {
+            try {
+                const save = await (async (): Promise<Save> => {
+                    const db = await opendb();
+                    const save = await db.get("save", "save");
+                    db.close();
+                    if (save) {
+                        return save.value;
+                    }
 
-                // default
-                return {
-                    nodes: [
-                        {
-                            node: {
-                                type: "oscillator",
-                                inputs: [
-                                    { connectFrom: null, value: 440 },
-                                    { connectFrom: null, value: "sine" },
-                                ],
+                    // default
+                    return {
+                        nodes: [
+                            {
+                                node: {
+                                    type: "oscillator",
+                                    inputs: [
+                                        { connectFrom: null, value: 440 },
+                                        { connectFrom: null, value: "sine" },
+                                    ],
+                                },
+                                nodepos: { x: 30, y: 230 },
                             },
-                            nodepos: { x: 30, y: 230 },
-                        },
-                        {
-                            node: {
-                                type: "gain",
-                                inputs: [
-                                    { connectFrom: { nodeNo: 0, pinNo: 0 }, value: null },
-                                    { connectFrom: null, value: "0.2" },
-                                ],
+                            {
+                                node: {
+                                    type: "gain",
+                                    inputs: [
+                                        { connectFrom: { nodeNo: 0, pinNo: 0 }, value: null },
+                                        { connectFrom: null, value: "0.2" },
+                                    ],
+                                },
+                                nodepos: { x: 190, y: 240 },
                             },
-                            nodepos: { x: 190, y: 240 },
-                        },
-                        {
-                            node: {
-                                type: "output",
-                                inputs: [
-                                    { connectFrom: { nodeNo: 1, pinNo: 0 }, value: null },
-                                ],
+                            {
+                                node: {
+                                    type: "output",
+                                    inputs: [
+                                        { connectFrom: { nodeNo: 1, pinNo: 0 }, value: null },
+                                    ],
+                                },
+                                nodepos: { x: 330, y: 250 },
                             },
-                            nodepos: { x: 330, y: 250 },
-                        },
-                    ]
-                };
-            })();
-            setNodes(save.nodes.map(e => ({ ...e.node, invalid: false })));
-            setNodeposs(save.nodes.map(e => e.nodepos));
-        } catch (e) {
-            // ignore
-            console.log("save broken; ignored");
-        }
+                        ]
+                    };
+                })();
+                setNodes(save.nodes.map(e => ({ ...e.node, invalid: false })));
+                setNodeposs(save.nodes.map(e => e.nodepos));
+            } catch (e) {
+                // ignore
+                console.log("save broken; ignored");
+            }
+        })();
     }, []);
 
     // save on change
@@ -82,10 +109,14 @@ const App = () => {
         if (!nodes) {
             return;
         }
-        const save: Save = {
-            nodes: nodes.map((node, i) => ({ node, nodepos: nodeposs![i] })),
-        };
-        localStorage.setItem("save", JSON.stringify(save));
+        (async () => {
+            const save: Save = {
+                nodes: nodes.map((node, i) => ({ node, nodepos: nodeposs![i] })),
+            };
+            const db = await opendb();
+            await db.put("save", { key: "save", value: save });
+            db.close();
+        })();
     }, [nodes, nodeposs]);
 
     useEffect(() => {

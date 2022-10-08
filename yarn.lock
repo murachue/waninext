@@ -1289,6 +1289,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"idb@npm:^7.1.0":
+  version: 7.1.0
+  resolution: "idb@npm:7.1.0"
+  checksum: 1ae62bcf9f0545390b39ce82a5162720ffeb4cf461a6e64e8bb595df6a4fe94a7f73bba8412ac683e291e5614bab1c6659d961dd4175cb1fa3ee29c1c8631549
+  languageName: node
+  linkType: hard
+
 "ignore@npm:^5.2.0":
   version: 5.2.0
   resolution: "ignore@npm:5.2.0"
@@ -2437,6 +2444,7 @@ __metadata:
     "@types/react-dom": 18.0.6
     eslint: 8.23.1
     eslint-config-next: 12.3.0
+    idb: ^7.1.0
     next: 12.3.0
     react: 18.2.0
     react-dnd: ^16.0.1
