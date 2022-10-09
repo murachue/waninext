@@ -30,6 +30,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
         const cxy = "touches" in e ? e.touches[0] : e;
         const shiftX = cxy.clientX - posT.x;  // this should not offset(parent-relative) but client-pos(client-relative)
         const shiftY = cxy.clientY - posT.y;  // ditto
+        let lasttouch = cxy;
 
         const pointer2tl = (cx: number, cy: number) => {
             const rawx = Math.round(cx - shiftX - posP.x);
@@ -41,6 +42,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
 
         const onmousemove = (e: MouseEvent | TouchEvent) => {
             const cxy = "touches" in e ? e.touches[0] : e;
+            lasttouch = cxy;
             const { x, y } = pointer2tl(cxy.clientX, cxy.clientY);
 
             setStyle({
@@ -56,7 +58,7 @@ const Draggable: FunctionComponent<PropsWithChildren<{
             document.removeEventListener("mouseup", onmouseup);
             document.removeEventListener("touchend", onmouseup);
 
-            const cxy = "touches" in e ? e.touches[0] : e;
+            const cxy = "touches" in e ? /* e.touches[0] already removed */lasttouch : e;
             const { x, y } = pointer2tl(cxy.clientX, cxy.clientY);
             dragendref.current(e.currentTarget! as HTMLElement, x, y, setStyle);
         };
