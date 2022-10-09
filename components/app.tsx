@@ -16,22 +16,19 @@ type Save = { nodes: SavedNode[]; };
 
 const opendb = async () => await openDB<{
     save: {
-        key: string /* key */;
-        value: {
-            key: string;
-            value: Save;
-        };
+        key: "save" /* out-of-line key: "save" */;
+        value: Save;
     };
     samples: {
         key: string /* name */;
         value: {
             name: string;
-            buffer: Uint8Array;
+            buffer: ArrayBuffer;
         };
     };
 }>("app", 1, {
     upgrade: (db, from, to, txn) => {
-        db.createObjectStore("save", { keyPath: "key" });
+        db.createObjectStore("save", {/* out-of-line key */ });
         db.createObjectStore("samples", { keyPath: "name" });
     }
 });
@@ -57,7 +54,7 @@ const App = () => {
                     const save = await db.get("save", "save");
                     db.close();
                     if (save) {
-                        return save.value;
+                        return save;
                     }
 
                     // default
@@ -114,7 +111,7 @@ const App = () => {
                 nodes: nodes.map((node, i) => ({ node, nodepos: nodeposs![i] })),
             };
             const db = await opendb();
-            await db.put("save", { key: "save", value: save });
+            await db.put("save", save, "save");
             db.close();
         })();
     }, [nodes, nodeposs]);
