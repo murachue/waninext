@@ -120,7 +120,7 @@ const Desk: FunctionComponent<{
         drop: (item: { state: NodeState; }, monitor) => {
             onnodeadd(item.state, monitor.getSourceClientOffset()!);
         }
-    }, [nodes]);
+    }, [onnodeadd]);
 
     return <div ref={dropref} style={{ width: "100%", height: "100%" }}>
         <Bezier settings={allLinks}>

@@ -61,7 +61,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
                 urlref.current!.value = item.urls[0];
             }
         }
-    }, [index, onLoadBuffer]);
+    }, [index, onLoadBuffer, urlref]);
 
     return <div ref={state.type === "buffer" ? dropref : undefined} className={`${styles.base} ${state.invalid ? styles.error : ""} ${isOver ? styles.dropping : ""} ${className || ""}`} style={style}>
         <div className={styles.title}>{state.type}</div>
