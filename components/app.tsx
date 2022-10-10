@@ -178,7 +178,7 @@ const App = () => {
             });
 
             nodes!.forEach((node, inode) => {
-                if (node.type === "oscillator" || node.type === "sampler") {
+                if (node.type === "oscillator" || node.type === "sampler" || node.type === "constant") {
                     (wanodes[inode] as AudioScheduledSourceNode).start();
                 }
             });
