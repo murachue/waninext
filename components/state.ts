@@ -109,6 +109,15 @@ export const NodeTypes: Record<string, NodeType> = {
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: async ctx => new ConstantSourceNode(ctx),
     },
+    "convolver": {
+        inputs: [
+            { name: "sound", type: "channels" },
+            { name: "buffer", type: "buffer" },
+            { name: "normalize", type: "scalar", default: "true", choice: ["false", "true"], toScalar: value => value !== "false" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
+        make: async ctx => new ConvolverNode(ctx),
+    },
     // pseudo WebAudio node for more pure...
     "add": {
         inputs: [
