@@ -63,7 +63,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
         }
     }, []);
 
-    return <div ref={dropref} className={`${styles.base} ${state.invalid ? styles.error : ""} ${isOver ? styles.dropping : ""} ${className || ""}`} style={style}>
+    return <div ref={state.type === "buffer" ? dropref : undefined} className={`${styles.base} ${state.invalid ? styles.error : ""} ${isOver ? styles.dropping : ""} ${className || ""}`} style={style}>
         <div className={styles.title}>{state.type}</div>
         {type.inputs.map((pin, i) =>
             <div key={i} className={`${styles.slot} ${styles.input}`}>
