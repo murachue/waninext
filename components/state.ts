@@ -5,6 +5,7 @@ export type PinType = {
     param?: string | null;
     unit?: string;
     type: "channels" | "param" | "scalar" | "buffer";
+    plug?: boolean; // TODO: type=-scalar +float +string
     choice?: string[];
     default?: string;
     toScalar?: (value: string) => any;
@@ -32,15 +33,23 @@ export const NodeTypes: Record<string, NodeType> = {
     "buffer": {
         inputs: [],
         outputs: [{ name: "buffer", param: null, type: "buffer" },],
-        // copy ArrayBuffer, because it detaches.
-        make: async (ctx, node) => node.abuffer || (node.bbuffer && await ctx.decodeAudioData(node.bbuffer.slice(0))) || null,
+        make: async (ctx, node) => {
+            if (node.abuffer) {
+                return node.abuffer;
+            }
+            if (node.bbuffer) {
+                // copy ArrayBuffer, because it detaches.
+                return await ctx.decodeAudioData(node.bbuffer.slice(0));
+            }
+            return null;
+        },
     },
     "sampler": {
         inputs: [
             { name: "buffer", type: "buffer" },
             { name: "loop", type: "scalar", default: "false", choice: ["false", "true"], toScalar: value => value !== "false" },
-            { name: "loopStart", type: "param", default: "0", unit: "sec" },
-            { name: "loopEnd", type: "param", default: "0", unit: "sec" },
+            { name: "loopStart", type: "param", default: "0", unit: "sec", plug: false },
+            { name: "loopEnd", type: "param", default: "0", unit: "sec", plug: false },
             { name: "rate", param: "playbackRate", type: "param", default: "1" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" }],

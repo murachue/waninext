@@ -127,9 +127,10 @@ const App = () => {
         const context = new AudioContext({ sampleRate: 44010 });
 
         (async () => {
+            // TODO: wrap each make() with try{} and update invalid/lasterror.
             const wanodes = await Promise.all(nodes.map(node => NodeTypes[node.type].make(context, node)));
             if (new Array(nodes.length).fill(0).some((_, i) => nodes[i].type === "buffer" && wanodes[i] && !nodes[i].abuffer)) {
-                // update cache
+                // update cache TODO: only if succeed
                 setNodes(nodes => nodes!.map((node, i) => ({ ...node, abuffer: node.type === "buffer" ? wanodes[i] as AudioBuffer : null })));
             }
             nodes.forEach((node, inode) => {
