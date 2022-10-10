@@ -13,6 +13,10 @@
     background: #c88;
 }
 
+.base.dropping {
+    background: #88c;
+}
+
 .title {
     background: #666;
     color: #fff;

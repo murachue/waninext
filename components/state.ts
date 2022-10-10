@@ -7,18 +7,19 @@ export type PinType = {
     type: "channels" | "param" | "scalar" | "buffer";
     choice?: string[];
     default?: string;
+    toScalar?: (value: string) => any;
 };
 
 export type NodeType = {
     inputs: PinType[];
     outputs: PinType[];
-    make: (ctx: AudioContext) => AudioNode;
+    make: (ctx: AudioContext, node: NodeState) => Promise<AudioNode | AudioBuffer | null>;
 };
 export const NodeTypes: Record<string, NodeType> = {
     "output": {
         inputs: [{ name: "sound", param: null, type: "channels" }],
         outputs: [],
-        make: (ctx) => ctx.destination,
+        make: async ctx => ctx.destination,
     },
     "oscillator": {
         inputs: [
@@ -26,23 +27,24 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "type", type: "scalar", choice: ["sine", "square", "sawtooth", "triangle", "custom"] },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: (ctx) => new OscillatorNode(ctx),
+        make: async ctx => new OscillatorNode(ctx),
     },
     "buffer": {
         inputs: [],
         outputs: [{ name: "buffer", param: null, type: "buffer" },],
-        make: (ctx) => null,
+        // copy ArrayBuffer, because it detaches.
+        make: async (ctx, node) => node.abuffer || (node.bbuffer && await ctx.decodeAudioData(node.bbuffer.slice(0))) || null,
     },
     "sampler": {
         inputs: [
             { name: "buffer", type: "buffer" },
-            { name: "loop", type: "scalar", default: "false", choice: ["false", "true"] },
+            { name: "loop", type: "scalar", default: "false", choice: ["false", "true"], toScalar: value => Boolean(value) },
             { name: "loopStart", type: "param", default: "0", unit: "sec" },
             { name: "loopEnd", type: "param", default: "0", unit: "sec" },
             { name: "rate", param: "playbackRate", type: "param", default: "1" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" }],
-        make: ctx => new AudioBufferSourceNode(ctx),
+        make: async ctx => new AudioBufferSourceNode(ctx),
     },
     "gain": {
         inputs: [
@@ -50,7 +52,7 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "gain", type: "param", default: "1" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: (ctx) => new GainNode(ctx),
+        make: async ctx => new GainNode(ctx),
     },
     "biquad": {
         inputs: [
@@ -61,7 +63,7 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "type", type: "scalar", choice: ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch", "allpass"] },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: (ctx) => new BiquadFilterNode(ctx),
+        make: async ctx => new BiquadFilterNode(ctx),
     },
     "delay": {
         inputs: [
@@ -69,7 +71,7 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "time", param: "delayTime", type: "param", default: "1", unit: "sec" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: ctx => new DelayNode(ctx),
+        make: async ctx => new DelayNode(ctx),
     },
     "compressor": {
         inputs: [
@@ -81,7 +83,7 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "release", type: "param", default: "0.25", unit: "sec" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: ctx => new DynamicsCompressorNode(ctx),
+        make: async ctx => new DynamicsCompressorNode(ctx),
     },
     "panner": {
         inputs: [
@@ -89,7 +91,7 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "pan", type: "param", default: "0", unit: "right" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: ctx => new StereoPannerNode(ctx),
+        make: async ctx => new StereoPannerNode(ctx),
     },
     // pseudo WebAudio node for more pure...
     "add": {
@@ -98,7 +100,7 @@ export const NodeTypes: Record<string, NodeType> = {
             { name: "sound", type: "channels" },
         ],
         outputs: [{ name: "sound", param: null, type: "channels" },],
-        make: (ctx) => new GainNode(ctx),
+        make: async ctx => new GainNode(ctx),
     },
 };
 
@@ -109,7 +111,7 @@ export type PinLocation = {
 
 export type Input = {
     connectFrom: PinLocation | null /* null: not connected */;
-    value: number | string | null /* null is only for connect-only */;
+    value: string | null /* null is only for connect-only */;
 };
 
 type ConnectedInput = Input & { connectFrom: NonNullable<Input["connectFrom"]>; };
@@ -117,6 +119,10 @@ type ConnectedInput = Input & { connectFrom: NonNullable<Input["connectFrom"]>; 
 export type NodeState = {
     type: string;
     inputs: Input[];
+    loading: boolean;
+    bbuffer: ArrayBuffer | null;
+    abuffer: AudioBuffer | null;
+    lasterror: string | null;
     invalid: boolean;
 };
 
@@ -172,6 +178,10 @@ export const newState: (typename: string) => NodeState = typename => {
                     : e.type === "param" || e.type === "scalar"
                         ? { connectFrom: null, value: e.default ?? null }
                         : { connectFrom: null, value: null }),
+        loading: false,
+        bbuffer: null,
+        abuffer: null,
+        lasterror: null,
         invalid: false,
     };
 };

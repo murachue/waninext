@@ -7,10 +7,10 @@ import Desk from "./desk";
 import DraggingPreview from "./dragpreview";
 import { newState, NodeState, NodeTypes } from "./state";
 import TmplNode from "./tmplnode";
-import { cloneset, clonesplice1 } from "./util";
+import { cloneset, clonesplice1, cloneunset } from "./util";
 import { openDB } from "idb";
 
-type SavedNodeState = Omit<NodeState, "type" | "invalid"> & { type: string; };
+type SavedNodeState = Omit<NodeState, "type" | "loading" | "abuffer" | "lasterror" | "invalid"> & { type: string; };
 type SavedNode = { node: SavedNodeState, nodepos: XYCoord; };
 type Save = { nodes: SavedNode[]; };
 
@@ -64,9 +64,10 @@ const App = () => {
                                 node: {
                                     type: "oscillator",
                                     inputs: [
-                                        { connectFrom: null, value: 440 },
+                                        { connectFrom: null, value: "440" },
                                         { connectFrom: null, value: "sine" },
                                     ],
+                                    bbuffer: null,
                                 },
                                 nodepos: { x: 30, y: 230 },
                             },
@@ -77,6 +78,7 @@ const App = () => {
                                         { connectFrom: { nodeNo: 0, pinNo: 0 }, value: null },
                                         { connectFrom: null, value: "0.2" },
                                     ],
+                                    bbuffer: null,
                                 },
                                 nodepos: { x: 190, y: 240 },
                             },
@@ -86,13 +88,14 @@ const App = () => {
                                     inputs: [
                                         { connectFrom: { nodeNo: 1, pinNo: 0 }, value: null },
                                     ],
+                                    bbuffer: null,
                                 },
                                 nodepos: { x: 330, y: 250 },
                             },
                         ]
                     };
                 })();
-                setNodes(save.nodes.map(e => ({ ...e.node, invalid: false })));
+                setNodes(save.nodes.map(e => ({ ...e.node, loading: false, abuffer: null, lasterror: null, invalid: false })));
                 setNodeposs(save.nodes.map(e => e.nodepos));
             } catch (e) {
                 // ignore
@@ -108,7 +111,10 @@ const App = () => {
         }
         (async () => {
             const save: Save = {
-                nodes: nodes.map((node, i) => ({ node, nodepos: nodeposs![i] })),
+                nodes: nodes.map((node, i) => ({
+                    node: cloneunset(node, ["loading", "abuffer", "lasterror", "invalid"]),
+                    nodepos: nodeposs![i],
+                })),
             };
             const db = await opendb();
             await db.put("save", save, "save");
@@ -120,52 +126,62 @@ const App = () => {
         if (!nodes) { return; }
         const context = new AudioContext({ sampleRate: 44010 });
 
-        const wanodes = nodes.map(node => NodeTypes[node.type].make(context));
-        nodes.forEach((node, inode) => {
-            if (node.invalid) {
-                return;
+        (async () => {
+            const wanodes = await Promise.all(nodes.map(node => NodeTypes[node.type].make(context, node)));
+            if (new Array(nodes.length).fill(0).some((_, i) => nodes[i].type === "buffer" && wanodes[i] && !nodes[i].abuffer)) {
+                // update cache
+                setNodes(nodes => nodes!.map((node, i) => ({ ...node, abuffer: node.type === "buffer" ? wanodes[i] as AudioBuffer : null })));
             }
-            try {
-                NodeTypes[node.type].inputs.forEach((inty, iinput) => {
-                    const nin = node.inputs[iinput];
-                    const cfrom = nin.connectFrom;
-                    const wain = wanodes[inode];
-                    if (cfrom) {
-                        // const out = nodes[cfrom.nodeNo].type.outputs[cfrom.pinNo];
-                        // TODO: output other than node itself? ChannelSplitter or AudioWorklet
-                        // following code confuses overload of connect()
-                        // const inap = inty.type === "channels" ? wain : ((wain as any)[inty.param || inty.name] as AudioParam | undefined);
-                        // if (inap) {
-                        //     wanodes[cfrom.nodeNo].connect(inap);
-                        // }
-                        if (inty.type === "channels") {
-                            wanodes[cfrom.nodeNo].connect(wain);
-                        } else {
-                            const inap = (wain as any)[inty.param || inty.name] as AudioParam | undefined;
-                            if (inap) {
-                                wanodes[cfrom.nodeNo].connect(inap);
+            nodes.forEach((node, inode) => {
+                if (node.invalid) {
+                    return;
+                }
+                try {
+                    const watarget = wanodes[inode];
+                    NodeTypes[node.type].inputs.forEach((inty, iinput) => {
+                        const nin = node.inputs[iinput];
+                        const cfrom = nin.connectFrom;
+                        if (cfrom) {
+                            // const out = nodes[cfrom.nodeNo].type.outputs[cfrom.pinNo];
+                            // TODO: output other than node itself? ChannelSplitter or AudioWorklet
+                            // following code confuses overload of connect()
+                            // const inap = inty.type === "channels" ? wain : ((wain as any)[inty.param || inty.name] as AudioParam | undefined);
+                            // if (inap) {
+                            //     wanodes[cfrom.nodeNo].connect(inap);
+                            // }
+                            if (inty.type === "channels") {
+                                (wanodes[cfrom.nodeNo] as AudioNode).connect(watarget as AudioNode);
+                            } else if (inty.type === "buffer") {
+                                (watarget as /* AudioNode */any)[inty.param || inty.name] = wanodes[cfrom.nodeNo] as AudioBuffer;
+                            } else if (inty.type === "param") {
+                                const inap = (watarget as any)[inty.param || inty.name] as AudioParam | undefined;
+                                if (inap) {
+                                    (wanodes[cfrom.nodeNo] as AudioNode).connect(inap);
+                                }
                             }
                         }
-                    }
 
-                    // set value even if it is connected.
-                    const inslot = (wain as any)[inty.param || inty.name];
-                    if (inslot instanceof AudioParam) {
-                        inslot.value = parseFloat(nin.value!.toString());
-                    } else if (inslot) {
-                        (wain as any)[inty.param || inty.name] = nin.value!;
-                    }
-                });
-            } catch (e) {
-                setNodes(nodes => cloneset(nodes, [inode, "invalid"], true));
-            }
-        });
+                        // set value even if it is connected.
+                        if (inty.type === "param" || inty.type === "scalar") {
+                            const inslot = (watarget as any)[inty.param || inty.name];
+                            if (inslot instanceof AudioParam) {
+                                inslot.value = (inty.toScalar || (v => parseFloat(v)))(nin.value!);
+                            } else if (inslot) {
+                                (watarget as any)[inty.param || inty.name] = inty.toScalar ? inty.toScalar(nin.value!) : nin.value!;
+                            }
+                        }
+                    });
+                } catch (e) {
+                    setNodes(nodes => cloneset(nodes, [inode, "invalid"], true));
+                }
+            });
 
-        nodes!.forEach((node, inode) => {
-            if (node.type === "oscillator") {
-                (wanodes[inode] as AudioScheduledSourceNode).start();
-            }
-        });
+            nodes!.forEach((node, inode) => {
+                if (node.type === "oscillator" || node.type === "sampler") {
+                    (wanodes[inode] as AudioScheduledSourceNode).start();
+                }
+            });
+        })();
 
         return () => { context.close(); };
     }, [nodes]);
@@ -205,6 +221,30 @@ const App = () => {
                         }))
                     })));
                     setNodeposs(clonesplice1(nodeposs, i));
+                }}
+                onloadbuffer={(i, state) => {
+                    if ("loading" in state) {
+                        setNodes(
+                            cloneset(cloneset(nodes,
+                                [i, "loading"], true),
+                                [i, "lasterror"], null));
+                        return;
+                    }
+                    if ("error" in state) {
+                        setNodes(
+                            cloneset(cloneset(nodes,
+                                [i, "loading"], false),
+                                [i, "lasterror"], String(state.error)));
+                        return;
+                    }
+                    if ("buffer" in state) {
+                        setNodes(
+                            cloneset(cloneset(nodes,
+                                [i, "loading"], false),
+                                [i, "bbuffer"], state.buffer));
+                        return;
+                    }
+                    throw new Error(`unknown loadbuffer state ${JSON.stringify(state)}`);
                 }} />
                 <div style={{
                     position: "absolute",

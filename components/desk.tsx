@@ -15,7 +15,8 @@ const Desk: FunctionComponent<{
     onrewire: (from: PinLocation | null, to: PinLocation) => void;
     onnoderemove: (i: number) => void;
     onchange: (nodeno: number, inno: number, value: string) => void;
-}> = ({ nodes, nodeposs, onnodeadd, onnodemove, onrewire, onnoderemove, onchange }) => {
+    onloadbuffer: Parameters<typeof InstNode>[0]["onLoadBuffer"];
+}> = ({ nodes, nodeposs, onnodeadd, onnodemove, onrewire, onnoderemove, onchange, onloadbuffer }) => {
     const [previewLink, setPreviewLink] = useState<Setting[]>([]);
     const allLinks = [
         ...useMemo(() => stateToBezierLinks(nodes).map(e => ({ ...e, class: style.blueLine })), [nodes]),
@@ -138,7 +139,8 @@ const Desk: FunctionComponent<{
                         onnodemove(i, x, y);
                     }}
                     onChange={({ nodeNo, inNo }, value) => { onchange(nodeNo, inNo, value); }}
-                    onRemove={i => { onnoderemove(i); }} />
+                    onRemove={i => { onnoderemove(i); }}
+                    onLoadBuffer={onloadbuffer} />
                 // </div>
             )}
             <div id={previewid} style={draggingStyle} />
