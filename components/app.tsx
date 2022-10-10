@@ -239,9 +239,10 @@ const App = () => {
                     }
                     if ("buffer" in state) {
                         setNodes(
-                            cloneset(cloneset(nodes,
+                            cloneset(cloneset(cloneset(nodes,
                                 [i, "loading"], false),
-                                [i, "bbuffer"], state.buffer));
+                                [i, "bbuffer"], state.buffer),
+                                [i, "abuffer"], null));
                         return;
                     }
                     throw new Error(`unknown loadbuffer state ${JSON.stringify(state)}`);
