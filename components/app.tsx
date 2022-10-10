@@ -166,7 +166,7 @@ const App = () => {
                             const inslot = (watarget as any)[inty.param || inty.name];
                             if (inslot instanceof AudioParam) {
                                 inslot.value = (inty.toScalar || (v => parseFloat(v)))(nin.value!);
-                            } else if (inslot) {
+                            } else if (inslot !== undefined) {
                                 (watarget as any)[inty.param || inty.name] = inty.toScalar ? inty.toScalar(nin.value!) : nin.value!;
                             }
                         }

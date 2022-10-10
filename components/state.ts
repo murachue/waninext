@@ -38,7 +38,7 @@ export const NodeTypes: Record<string, NodeType> = {
     "sampler": {
         inputs: [
             { name: "buffer", type: "buffer" },
-            { name: "loop", type: "scalar", default: "false", choice: ["false", "true"], toScalar: value => Boolean(value) },
+            { name: "loop", type: "scalar", default: "false", choice: ["false", "true"], toScalar: value => value !== "false" },
             { name: "loopStart", type: "param", default: "0", unit: "sec" },
             { name: "loopEnd", type: "param", default: "0", unit: "sec" },
             { name: "rate", param: "playbackRate", type: "param", default: "1" },
