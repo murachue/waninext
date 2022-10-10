@@ -102,6 +102,13 @@ export const NodeTypes: Record<string, NodeType> = {
         outputs: [{ name: "sound", param: null, type: "channels" },],
         make: async ctx => new StereoPannerNode(ctx),
     },
+    "constant": {
+        inputs: [
+            { name: "offset", type: "param", default: "1" },
+        ],
+        outputs: [{ name: "sound", param: null, type: "channels" },],
+        make: async ctx => new ConstantSourceNode(ctx),
+    },
     // pseudo WebAudio node for more pure...
     "add": {
         inputs: [
