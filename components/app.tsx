@@ -37,6 +37,7 @@ const App = () => {
     const [width, setWidth] = useState(800);
     const [nodes, setNodes] = useState<NodeState[] | null>(null);
     const [nodeposs, setNodeposs] = useState<XYCoord[] | null>(null);
+    const [showTemplates, setShowTemplates] = useState(true);
 
     useEffect(() => {
         setWidth(window.innerWidth);
@@ -189,83 +190,92 @@ const App = () => {
 
     return <div id="app">
         <DndProvider backend={width < 800 ? TouchBackend : HTML5Backend}>
-            {!nodes || !nodeposs ? <></> : <><Desk
-                nodes={nodes!}
-                nodeposs={nodeposs}
-                onnodeadd={(node, xy) => {
-                    setNodes([...nodes, node]);
-                    setNodeposs([...nodeposs, xy]);
-                }}
-                onnodemove={(i, x, y) => {
-                    setNodeposs(cloneset(nodeposs, [i], { x, y }));
-                }}
-                onrewire={(from, to) => {
-                    setNodes(cloneset(nodes, [to.nodeNo, "inputs", to.pinNo, "connectFrom"], from));
-                }}
-                onchange={(nodeno, inno, value) => {
-                    setNodes(cloneset(cloneset(nodes,
-                        [nodeno, "inputs", inno, "value"], value),
-                        [nodeno, "invalid"], false));
-                }}
-                onnoderemove={(i) => {
-                    setNodes(clonesplice1(nodes, i).map(node => ({
-                        ...node,
-                        inputs: node.inputs.map(inp => ({
-                            ...inp, connectFrom: !inp.connectFrom
-                                ? null
-                                : inp.connectFrom.nodeNo === i
-                                    ? null
-                                    : {
-                                        ...inp.connectFrom,
-                                        nodeNo: inp.connectFrom.nodeNo - (i <= inp.connectFrom.nodeNo ? 1 : 0),
-                                    }
-                        }))
-                    })));
-                    setNodeposs(clonesplice1(nodeposs, i));
-                }}
-                onloadbuffer={(i, state) => {
-                    if ("loading" in state) {
-                        setNodes(
-                            cloneset(cloneset(nodes,
-                                [i, "loading"], true),
-                                [i, "lasterror"], null));
-                        return;
-                    }
-                    if ("error" in state) {
-                        setNodes(
-                            cloneset(cloneset(nodes,
-                                [i, "loading"], false),
-                                [i, "lasterror"], String(state.error)));
-                        return;
-                    }
-                    if ("buffer" in state) {
-                        setNodes(
-                            cloneset(cloneset(cloneset(nodes,
-                                [i, "loading"], false),
-                                [i, "bbuffer"], state.buffer),
-                                [i, "abuffer"], null));
-                        return;
-                    }
-                    throw new Error(`unknown loadbuffer state ${JSON.stringify(state)}`);
-                }} />
-                <div style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    width: "100%",
-                    border: "1px solid #ccc",
-                    background: "#444c",
-                    overflowX: "auto",
-                    display: "flex",
-                    flexDirection: "row",
-                }}>
-                    {Object.entries(NodeTypes).filter(([k, v]) => k !== "output").map(([k, v]) =>
-                        <div key={k} className={style.tmplmarginer}>
-                            <TmplNode state={newState(k)} />
-                        </div>
-                    )}
+            <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "row" }}>
+                <div className={style.menu} style={{ height: "100%", background: "#eee", display: "flex", flexDirection: "column" }}>
+                    <a onClick={e => setShowTemplates(!showTemplates)}>{showTemplates ? "↓" : "↑"}Templates{showTemplates ? "↓" : "↑"}</a>
+                    <a>Export</a>
+                    <a>Import</a>
                 </div>
-                <DraggingPreview /></>}
+                <div style={{ flex: 1, height: "100%", position: "relative" }}>
+                    {!nodes || !nodeposs ? <></> : <><Desk
+                        nodes={nodes!}
+                        nodeposs={nodeposs}
+                        onnodeadd={(node, xy) => {
+                            setNodes([...nodes, node]);
+                            setNodeposs([...nodeposs, xy]);
+                        }}
+                        onnodemove={(i, x, y) => {
+                            setNodeposs(cloneset(nodeposs, [i], { x, y }));
+                        }}
+                        onrewire={(from, to) => {
+                            setNodes(cloneset(nodes, [to.nodeNo, "inputs", to.pinNo, "connectFrom"], from));
+                        }}
+                        onchange={(nodeno, inno, value) => {
+                            setNodes(cloneset(cloneset(nodes,
+                                [nodeno, "inputs", inno, "value"], value),
+                                [nodeno, "invalid"], false));
+                        }}
+                        onnoderemove={(i) => {
+                            setNodes(clonesplice1(nodes, i).map(node => ({
+                                ...node,
+                                inputs: node.inputs.map(inp => ({
+                                    ...inp, connectFrom: !inp.connectFrom
+                                        ? null
+                                        : inp.connectFrom.nodeNo === i
+                                            ? null
+                                            : {
+                                                ...inp.connectFrom,
+                                                nodeNo: inp.connectFrom.nodeNo - (i <= inp.connectFrom.nodeNo ? 1 : 0),
+                                            }
+                                }))
+                            })));
+                            setNodeposs(clonesplice1(nodeposs, i));
+                        }}
+                        onloadbuffer={(i, state) => {
+                            if ("loading" in state) {
+                                setNodes(
+                                    cloneset(cloneset(nodes,
+                                        [i, "loading"], true),
+                                        [i, "lasterror"], null));
+                                return;
+                            }
+                            if ("error" in state) {
+                                setNodes(
+                                    cloneset(cloneset(nodes,
+                                        [i, "loading"], false),
+                                        [i, "lasterror"], String(state.error)));
+                                return;
+                            }
+                            if ("buffer" in state) {
+                                setNodes(
+                                    cloneset(cloneset(cloneset(nodes,
+                                        [i, "loading"], false),
+                                        [i, "bbuffer"], state.buffer),
+                                        [i, "abuffer"], null));
+                                return;
+                            }
+                            throw new Error(`unknown loadbuffer state ${JSON.stringify(state)}`);
+                        }} />
+                        {!showTemplates ? null : <div style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            width: "100%",
+                            border: "1px solid #ccc",
+                            background: "#444c",
+                            overflowX: "auto",
+                            display: "flex",
+                            flexDirection: "row",
+                        }}>
+                            {Object.entries(NodeTypes).filter(([k, v]) => k !== "output").map(([k, v]) =>
+                                <div key={k} className={style.tmplmarginer}>
+                                    <TmplNode state={newState(k)} />
+                                </div>
+                            )}
+                        </div>}
+                        <DraggingPreview /></>}
+                </div>
+            </div>
         </DndProvider>
     </div >;
 };

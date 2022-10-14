@@ -29,3 +29,22 @@ path.blueLine {
     top: 0;
     left: 0;
 } */
+
+/* .menu {
+    height: 100%;
+    /* display: flex; * /
+    background: #eee;
+} */
+
+.menu a {
+    writing-mode: vertical-rl;
+    background: transparent;
+    border: transparent;
+    padding: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.menu a:hover {
+    background: #88e;
+}
