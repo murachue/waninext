@@ -48,3 +48,23 @@ path.blueLine {
 .menu a:hover {
     background: #88e;
 }
+
+.remove {
+    --size: 2em;
+    position: absolute;
+    top: calc(-1 * var(--size) / 2);
+    right: calc(-1 * var(--size) / 2);
+    width: var(--size);
+    height: var(--size);
+    border: 1px solid #888;
+    border-radius: var(--size);
+    background: #ccc;
+    display: block;
+}
+
+.remove::after {
+    content: "\00d7";
+    display: block;
+    text-align: center;
+    font-size: var(--size);
+}

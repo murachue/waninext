@@ -7,7 +7,7 @@ import Desk from "./desk";
 import DraggingPreview from "./dragpreview";
 import { newState, NodeState, NodeTypes } from "./state";
 import TmplNode from "./tmplnode";
-import { cloneset, clonesplice1, cloneunset } from "./util";
+import { clonemap, cloneset, clonesplice1, cloneunset } from "./util";
 import { openDB } from "idb";
 
 type SavedNodeState = Omit<NodeState, "type" | "loading" | "abuffer" | "lasterror" | "invalid"> & { type: string; };
@@ -38,6 +38,9 @@ const App = () => {
     const [nodes, setNodes] = useState<NodeState[] | null>(null);
     const [nodeposs, setNodeposs] = useState<XYCoord[] | null>(null);
     const [showTemplates, setShowTemplates] = useState(true);
+    const [showExport, setShowExport] = useState(false);
+    const [showImport, setShowImport] = useState(false);
+    const [portText, setPortText] = useState("");
 
     useEffect(() => {
         setWidth(window.innerWidth);
@@ -193,8 +196,25 @@ const App = () => {
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "row" }}>
                 <div className={style.menu} style={{ height: "100%", background: "#eee", display: "flex", flexDirection: "column" }}>
                     <a onClick={e => setShowTemplates(!showTemplates)}>{showTemplates ? "↓" : "↑"}Templates{showTemplates ? "↓" : "↑"}</a>
-                    <a>Export</a>
-                    <a>Import</a>
+                    <a onClick={e => {
+                        setShowExport(true);
+
+                        const b64encode = (v: ArrayBuffer) => btoa(String.fromCharCode.apply(null, new Uint8Array(v) as any)); // TODO: slow.
+                        const save: Save = {
+                            nodes: nodes!.map((node, i) => ({
+                                node: clonemap(cloneunset(node,
+                                    ["loading", "abuffer", "lasterror", "invalid"]),
+                                    ["bbuffer"], (v: ArrayBuffer | null) => v === null ? v : b64encode(v)),
+                                nodepos: nodeposs![i],
+                            })),
+                        };
+
+                        setPortText(JSON.stringify(save, null, 2));
+                    }}>Export</a>
+                    <a onClick={e => {
+                        setShowImport(true);
+                        setPortText("");
+                    }}>Import</a>
                 </div>
                 <div style={{ flex: 1, height: "100%", position: "relative" }}>
                     {!nodes || !nodeposs ? <></> : <><Desk
@@ -276,6 +296,23 @@ const App = () => {
                         <DraggingPreview /></>}
                 </div>
             </div>
+            {!(showExport || showImport) ? null : <div style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%", display: "flex", background: "#444c" }}>
+                <div style={{ margin: "auto", width: "60%", height: "60%", padding: "10px", display: "flex", flexDirection: "column", position: "relative", background: "#fff", borderRadius: "10px", boxShadow: "0 10px 10px black" }}>
+                    <h1 style={{ fontSize: "2em", margin: "5px" }}>{showExport ? "Export" : showImport ? "Import" : null}</h1>
+                    <textarea style={{ width: "100%", flex: 1, background: "white", color: showExport ? "gray" : "black" }} readOnly={showExport} value={portText} onChange={e => {
+                        if (showImport) {
+                            const text = e.target.value;
+                            if (text) {
+                                // TODO load
+                                setPortText(text);
+                            }
+                        }
+                    }} onClick={e => {
+                        e.currentTarget.select();
+                    }} />
+                    <div className={style.remove} onClick={e => { setShowExport(false); setShowImport(false); }} />
+                </div>
+            </div>}
         </DndProvider>
     </div >;
 };
