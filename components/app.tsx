@@ -41,6 +41,7 @@ const App = () => {
     const [showExport, setShowExport] = useState(false);
     const [showImport, setShowImport] = useState(false);
     const [portText, setPortText] = useState("");
+    const [portValid, setPortValid] = useState(true);
 
     useEffect(() => {
         setWidth(window.innerWidth);
@@ -299,14 +300,30 @@ const App = () => {
             {!(showExport || showImport) ? null : <div style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%", display: "flex", background: "#444c" }}>
                 <div style={{ margin: "auto", width: "60%", height: "60%", padding: "10px", display: "flex", flexDirection: "column", position: "relative", background: "#fff", borderRadius: "10px", boxShadow: "0 10px 10px black" }}>
                     <h1 style={{ fontSize: "2em", margin: "5px" }}>{showExport ? "Export" : showImport ? "Import" : null}</h1>
-                    <textarea style={{ width: "100%", flex: 1, background: "white", color: showExport ? "gray" : "black" }} readOnly={showExport} value={portText} onChange={e => {
+                    <textarea style={{ width: "100%", flex: 1, background: portValid ? "white" : "#fdd", color: showExport ? "gray" : "black" }} readOnly={showExport} value={portText} onChange={e => {
                         if (showImport) {
                             const text = e.target.value;
+                            setPortValid(true);
                             if (text) {
-                                // TODO load
-                                setPortText(text);
+                                try {
+                                    const save = JSON.parse(text) as Save;
+                                    const b64decode = (str: string): ArrayBuffer | null => new Uint8Array(Array.prototype.map.call(atob(str), e => e.charCodeAt(0)) as number[]).buffer;
+                                    setNodes(save.nodes.map(e => ({
+                                        ...cloneunset(e.node, ["nodepos"]),
+                                        loading: false,
+                                        bbuffer: e.node.bbuffer ? b64decode(e.node.bbuffer as unknown as string) : null,
+                                        abuffer: null,
+                                        lasterror: null,
+                                        invalid: false,
+                                    })));
+                                    setNodeposs(save.nodes.map(e => e.nodepos));
+                                } catch (e) {
+                                    setPortValid(false);
+                                }
                             }
+                            setPortText(text);
                         }
+
                     }} onClick={e => {
                         e.currentTarget.select();
                     }} />
