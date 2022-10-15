@@ -144,8 +144,9 @@ type ConnectedInput = Input & { connectFrom: NonNullable<Input["connectFrom"]>; 
 export type NodeState = {
     type: string;
     inputs: Input[];
-    loading: boolean;
     bbuffer: ArrayBuffer | null;
+
+    loading: boolean;
     abuffer: AudioBuffer | null;
     lasterror: string | null;
     invalid: boolean;

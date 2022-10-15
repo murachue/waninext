@@ -10,28 +10,94 @@ import TmplNode from "./tmplnode";
 import { clonemap, cloneset, clonesplice1, cloneunset } from "./util";
 import { openDB } from "idb";
 
-type SavedNodeState = Omit<NodeState, "type" | "loading" | "abuffer" | "lasterror" | "invalid"> & { type: string; };
+type SavedNodeState = Omit<NodeState, "loading" | "abuffer" | "lasterror" | "invalid">;
 type SavedNode = { node: SavedNodeState, nodepos: XYCoord; };
 type Save = { nodes: SavedNode[]; };
+
+type ExportedNodeState = Omit<NodeState, "loading" | "bbuffer" | "abuffer" | "lasterror" | "invalid"> & { bbuffer: string | null; };
+type ExportedNode = { node: ExportedNodeState, nodepos: XYCoord; };
+type Export = { nodes: ExportedNode[]; };
+
+const stateToSave = (nodes: NodeState[], nodeposs: XYCoord[]): Save => ({
+    nodes: nodes.map((node, i) => ({
+        node: cloneunset(node, ["loading", "abuffer", "lasterror", "invalid"]),
+        nodepos: nodeposs![i],
+    })),
+});
+const saveToState = (save: Save): { nodes: NodeState[], nodeposs: XYCoord[]; } => ({
+    nodes: save.nodes.map(e => ({ ...e.node, loading: false, abuffer: null, lasterror: null, invalid: false })),
+    nodeposs: save.nodes.map(e => e.nodepos),
+});
+
+const b64encode = (v: ArrayBuffer) => btoa(String.fromCharCode.apply(null, new Uint8Array(v) as any)); // TODO: slow.
+const stateToExport = (nodes: NodeState[], nodeposs: XYCoord[]): Export => ({
+    nodes: nodes!.map((node, i) => ({
+        node: clonemap(cloneunset(node,
+            ["loading", "abuffer", "lasterror", "invalid"]),
+            ["bbuffer"], (v: ArrayBuffer | null) => v === null ? v : b64encode(v)),
+        nodepos: nodeposs![i],
+    })),
+});
+const b64decode = (str: string): ArrayBuffer | null => new Uint8Array(Array.prototype.map.call(atob(str), e => e.charCodeAt(0)) as number[]).buffer;
+const exportToState = (save: Export): { nodes: NodeState[], nodeposs: XYCoord[]; } => ({
+    nodes: save.nodes.map(e => ({
+        ...cloneunset(e.node, ["nodepos"]),
+        loading: false,
+        bbuffer: e.node.bbuffer ? b64decode(e.node.bbuffer as unknown as string) : null,
+        abuffer: null,
+        lasterror: null,
+        invalid: false,
+    })),
+    nodeposs: save.nodes.map(e => e.nodepos),
+});
 
 const opendb = async () => await openDB<{
     save: {
         key: "save" /* out-of-line key: "save" */;
         value: Save;
     };
-    samples: {
-        key: string /* name */;
-        value: {
-            name: string;
-            buffer: ArrayBuffer;
-        };
-    };
 }>("app", 1, {
     upgrade: (db, from, to, txn) => {
         db.createObjectStore("save", {/* out-of-line key */ });
-        db.createObjectStore("samples", { keyPath: "name" });
     }
 });
+
+const defaultState: Save = {
+    nodes: [
+        {
+            node: {
+                type: "oscillator",
+                inputs: [
+                    { connectFrom: null, value: "440" },
+                    { connectFrom: null, value: "sine" },
+                ],
+                bbuffer: null,
+            },
+            nodepos: { x: 30, y: 230 },
+        },
+        {
+            node: {
+                type: "gain",
+                inputs: [
+                    { connectFrom: { nodeNo: 0, pinNo: 0 }, value: null },
+                    { connectFrom: null, value: "0.2" },
+                ],
+                bbuffer: null,
+            },
+            nodepos: { x: 190, y: 240 },
+        },
+        {
+            node: {
+                type: "output",
+                inputs: [
+                    { connectFrom: { nodeNo: 1, pinNo: 0 }, value: null },
+                ],
+                bbuffer: null,
+            },
+            nodepos: { x: 330, y: 250 },
+        },
+    ]
+};
 
 const App = () => {
     const [width, setWidth] = useState(800);
@@ -63,45 +129,11 @@ const App = () => {
                     }
 
                     // default
-                    return {
-                        nodes: [
-                            {
-                                node: {
-                                    type: "oscillator",
-                                    inputs: [
-                                        { connectFrom: null, value: "440" },
-                                        { connectFrom: null, value: "sine" },
-                                    ],
-                                    bbuffer: null,
-                                },
-                                nodepos: { x: 30, y: 230 },
-                            },
-                            {
-                                node: {
-                                    type: "gain",
-                                    inputs: [
-                                        { connectFrom: { nodeNo: 0, pinNo: 0 }, value: null },
-                                        { connectFrom: null, value: "0.2" },
-                                    ],
-                                    bbuffer: null,
-                                },
-                                nodepos: { x: 190, y: 240 },
-                            },
-                            {
-                                node: {
-                                    type: "output",
-                                    inputs: [
-                                        { connectFrom: { nodeNo: 1, pinNo: 0 }, value: null },
-                                    ],
-                                    bbuffer: null,
-                                },
-                                nodepos: { x: 330, y: 250 },
-                            },
-                        ]
-                    };
+                    return defaultState;
                 })();
-                setNodes(save.nodes.map(e => ({ ...e.node, loading: false, abuffer: null, lasterror: null, invalid: false })));
-                setNodeposs(save.nodes.map(e => e.nodepos));
+                const { nodes: loadednodes, nodeposs: loadednodeposs } = saveToState(save);
+                setNodes(loadednodes);
+                setNodeposs(loadednodeposs);
             } catch (e) {
                 // ignore
                 console.log("save broken; ignored");
@@ -115,14 +147,8 @@ const App = () => {
             return;
         }
         (async () => {
-            const save: Save = {
-                nodes: nodes.map((node, i) => ({
-                    node: cloneunset(node, ["loading", "abuffer", "lasterror", "invalid"]),
-                    nodepos: nodeposs![i],
-                })),
-            };
             const db = await opendb();
-            await db.put("save", save, "save");
+            await db.put("save", stateToSave(nodes, nodeposs!), "save");
             db.close();
         })();
     }, [nodes, nodeposs]);
@@ -199,18 +225,7 @@ const App = () => {
                     <a onClick={e => setShowTemplates(!showTemplates)}>{showTemplates ? "↓" : "↑"}Templates{showTemplates ? "↓" : "↑"}</a>
                     <a onClick={e => {
                         setShowExport(true);
-
-                        const b64encode = (v: ArrayBuffer) => btoa(String.fromCharCode.apply(null, new Uint8Array(v) as any)); // TODO: slow.
-                        const save: Save = {
-                            nodes: nodes!.map((node, i) => ({
-                                node: clonemap(cloneunset(node,
-                                    ["loading", "abuffer", "lasterror", "invalid"]),
-                                    ["bbuffer"], (v: ArrayBuffer | null) => v === null ? v : b64encode(v)),
-                                nodepos: nodeposs![i],
-                            })),
-                        };
-
-                        setPortText(JSON.stringify(save, null, 2));
+                        setPortText(JSON.stringify(stateToExport(nodes!, nodeposs!), null, 2));
                     }}>Export</a>
                     <a onClick={e => {
                         setShowImport(true);
@@ -297,7 +312,11 @@ const App = () => {
                         <DraggingPreview /></>}
                 </div>
             </div>
-            {!(showExport || showImport) ? null : <div style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%", display: "flex", background: "#444c" }}>
+            {!(showExport || showImport) ? null : <div style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%", display: "flex", background: "#444c" }} onClick={e => {
+                if (e.target !== e.currentTarget) return;
+                setShowExport(false);
+                setShowImport(false);
+            }}>
                 <div style={{ margin: "auto", width: "60%", height: "60%", padding: "10px", display: "flex", flexDirection: "column", position: "relative", background: "#fff", borderRadius: "10px", boxShadow: "0 10px 10px black" }}>
                     <h1 style={{ fontSize: "2em", margin: "5px" }}>{showExport ? "Export" : showImport ? "Import" : null}</h1>
                     <textarea style={{ width: "100%", flex: 1, background: portValid ? "white" : "#fdd", color: showExport ? "gray" : "black" }} readOnly={showExport} value={portText} onChange={e => {
@@ -306,17 +325,10 @@ const App = () => {
                             setPortValid(true);
                             if (text) {
                                 try {
-                                    const save = JSON.parse(text) as Save;
-                                    const b64decode = (str: string): ArrayBuffer | null => new Uint8Array(Array.prototype.map.call(atob(str), e => e.charCodeAt(0)) as number[]).buffer;
-                                    setNodes(save.nodes.map(e => ({
-                                        ...cloneunset(e.node, ["nodepos"]),
-                                        loading: false,
-                                        bbuffer: e.node.bbuffer ? b64decode(e.node.bbuffer as unknown as string) : null,
-                                        abuffer: null,
-                                        lasterror: null,
-                                        invalid: false,
-                                    })));
-                                    setNodeposs(save.nodes.map(e => e.nodepos));
+                                    const save = JSON.parse(text) as Export;
+                                    const { nodes: loadednodes, nodeposs: loadednodeposs } = exportToState(save);
+                                    setNodes(loadednodes);
+                                    setNodeposs(loadednodeposs);
                                 } catch (e) {
                                     setPortValid(false);
                                 }

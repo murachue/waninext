@@ -25,7 +25,7 @@ export const cloneset = <T/* extends array|object */,>(target: T, path: (number 
     }
 };
 
-export const clonemap = <T/* extends array|object */,>(target: T, path: (number | string)[], map: (v: any) => unknown): T => {
+export const clonemap = <T/* extends array|object */, U>(target: T, path: (number | string)[], map: (v: any) => unknown): U => {
     if (path.length < 1) {
         throw new Error(`empty path: ${JSON.stringify(path)}`);
     }
@@ -35,18 +35,18 @@ export const clonemap = <T/* extends array|object */,>(target: T, path: (number 
             if (typeof path0 !== "number") {
                 throw new Error(`path must be number: ${path0}`);
             }
-            return [...target.slice(0, path0), map(target[path0]), ...target.slice(path0 + 1)] as T;
+            return [...target.slice(0, path0), map(target[path0]), ...target.slice(path0 + 1)] as U;
         } else {
-            return { ...target, [path0]: map((target as any)[path0]) } as T;
+            return { ...target, [path0]: map((target as any)[path0]) } as U;
         }
     }
     if (Array.isArray(target)) {
         if (typeof path0 !== "number") {
             throw new Error(`path must be number: ${path0}`);
         }
-        return [...target.slice(0, path0), cloneset(target[path0], pathr, map), ...target.slice(path0 + 1)] as T;
+        return [...target.slice(0, path0), cloneset(target[path0], pathr, map), ...target.slice(path0 + 1)] as U;
     } else {
-        return { ...target, [path0]: cloneset((target as any)[path0], pathr, map) } as T;
+        return { ...target, [path0]: cloneset((target as any)[path0], pathr, map) } as U;
     }
 };
 
