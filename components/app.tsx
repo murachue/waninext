@@ -284,8 +284,9 @@ const App = () => {
                             }
                             if ("buffer" in state) {
                                 setNodes(
-                                    cloneset(cloneset(cloneset(nodes,
+                                    cloneset(cloneset(cloneset(cloneset(nodes,
                                         [i, "loading"], false),
+                                        [i, "lasterror"], null),
                                         [i, "bbuffer"], state.buffer),
                                         [i, "abuffer"], null));
                                 return;

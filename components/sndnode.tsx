@@ -27,6 +27,22 @@ const sibytes = (nbytes: number) =>
             ? `${(nbytes / 1000).toFixed(2)}KB`
             : `${(nbytes / 1000000).toFixed(2)}MB`;
 
+type OnLoadBufferFunc = (index: number, state: { loading: true; } | { error: unknown; } | { buffer: ArrayBuffer; }) => void;
+
+const loadWrapper = async (index: number, onLoadBuffer: OnLoadBufferFunc | undefined, loader: () => Promise<ArrayBuffer>) => {
+    if (!onLoadBuffer) {
+        return;
+    }
+
+    onLoadBuffer(index, { loading: true });
+    try {
+        const buffer = await loader();
+        onLoadBuffer(index, { buffer });
+    } catch (error) {
+        onLoadBuffer(index, { error });
+    }
+};
+
 const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "className" | "style">> & {
     index: number;
     state: NodeState;
@@ -47,15 +63,7 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
         drop: (item, monitor) => {
             if (item.files && onLoadBuffer) {
                 const file = item.files[0];
-                (async () => {
-                    onLoadBuffer(index, { loading: true });
-                    try {
-                        const buffer = await file.arrayBuffer();
-                        onLoadBuffer(index, { buffer });
-                    } catch (error) {
-                        onLoadBuffer(index, { error });
-                    }
-                })();
+                loadWrapper(index, onLoadBuffer, async () => file.arrayBuffer()); // free-run async
             }
             if (item.urls) {
                 urlref.current!.value = item.urls[0];
@@ -73,29 +81,17 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
                     : <ParamSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
             </div>)}
         {state.type !== "buffer" ? null :
-            <div style={{ padding: "5px 5px" }}>
-                <input ref={urlref} style={{ width: "8em" }} type="text" placeholder="URL..." />
-                <button onClick={() => {
-                    if (!onLoadBuffer) {
-                        return;
-                    }
-                    (async () => {
-                        onLoadBuffer(index, { loading: true });
-                        try {
-                            const res = await fetch(urlref.current!.value);
-                            const buffer = await res.arrayBuffer();
-                            onLoadBuffer(index, { buffer });
-                        } catch (error) {
-                            onLoadBuffer(index, { error });
-                        }
-                    })();
-                }} >Load</button>
-            </div>}
+            <>
+                <div style={{ padding: "5px 5px" }}>
+                    <input ref={urlref} style={{ width: "8em" }} type="text" placeholder="URL..." />
+                    <button onClick={() => loadWrapper(index, onLoadBuffer, async () => await (await fetch(urlref.current!.value)).arrayBuffer())}>Load</button>
+                </div>
+                <div style={{ padding: "5px 5px" }}>
+                    {!state.abuffer ? "empty" : <>{state.abuffer.duration.toFixed(2)} sec ({sibytes(state.bbuffer!.byteLength)})</>}
+                </div>
+            </>}
         {!state.lasterror ? null : <div style={{ padding: "5px 5px", color: "red" }}>
             {state.lasterror}
-        </div>}
-        {state.type !== "buffer" ? null : <div style={{ padding: "5px 5px" }}>
-            {!state.abuffer ? "empty" : <>{state.abuffer.duration.toFixed(2)} sec ({sibytes(state.bbuffer!.byteLength)})</>}
         </div>}
         {type.outputs.map((pin, i) =>
             <div key={i} className={`${styles.slot} ${styles.output}`}>
