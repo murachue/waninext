@@ -196,14 +196,7 @@ export const newState: (typename: string) => NodeState = typename => {
     }
     return {
         type: typename,
-        inputs: type.inputs.map(e =>
-            e.type === "channels"
-                ? { connectFrom: null, value: null }
-                : e.choice
-                    ? { connectFrom: null, value: e.default ?? e.choice[0] }
-                    : e.type === "param" || e.type === "scalar"
-                        ? { connectFrom: null, value: e.default ?? null }
-                        : { connectFrom: null, value: null }),
+        inputs: type.inputs.map(e => ({ connectFrom: null, value: e.default ?? e.choice?.[0] ?? null })),
         loading: false,
         bbuffer: null,
         abuffer: null,
