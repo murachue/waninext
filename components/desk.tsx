@@ -132,8 +132,7 @@ const Desk: FunctionComponent<{
                     x={nodeposs[i].x}
                     y={nodeposs[i].y}
                     state={node}
-                    plugHandlers={plugHandlers}
-                    plugStateTuple={plugStateTuple}
+                    plugParams={{ handlers: plugHandlers, stateTuple: plugStateTuple }}
                     dragend={(e, x, y, setStyle) => {
                         setStyle(style => cloneunset(style, ["left", "top"]));
                         onnodemove(i, x, y);

@@ -1,5 +1,5 @@
 // Node in the Template
-import { FunctionComponent, HTMLAttributes, PropsWithChildren, useEffect, useState } from "react";
+import { FunctionComponent, HTMLAttributes, useEffect, useState } from "react";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import { defaultPlugState, PlugState } from "./plug";
@@ -29,8 +29,7 @@ const TmplNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cla
             style={{ ...(style || {}), boxShadow: preview ? "0 5px 5px black" : undefined }}
             index={999 /* dummy FIXME */}
             state={state}
-            plugHandlers={{ dragstart: () => "" }}
-            plugStateTuple={[{ from: null, to: null }, () => { }]}
+            plugParams={{ handlers: { dragstart: () => "" }, stateTuple: [{ from: null, to: null }, () => { }] }}
             onChange={() => { /* ignore */ }} />
     </div>;
 };

@@ -3,7 +3,7 @@ import { useDrop } from "react-dnd";
 import { NativeTypes } from "react-dnd-html5-backend";
 import Plug from "./plug";
 import styles from "./sndnode.module.css";
-import { genPlugId, genShortTy, INPUT, NodeState, NodeTypes, OUTPUT, PinType } from "./state";
+import { genPlugId, genShortTy, INPUT, NodeState, NodeType, NodeTypes, OUTPUT, PinType } from "./state";
 
 const ConnectSlot: FunctionComponent<{ pin: PinType; }> = ({ pin }) => <div className={styles.label}>{pin.name}</div>;
 
@@ -43,15 +43,28 @@ const loadWrapper = async (index: number, onLoadBuffer: OnLoadBufferFunc | undef
     }
 };
 
+export type PlugParams = {
+    handlers: Parameters<typeof Plug>[0]["handlers"];
+    stateTuple: Parameters<typeof Plug>[0]["stateTuple"];
+};
+
+const NodePlug = ({ nodeNo, io, pinNo, pin, plugParams }: { nodeNo: number, io: typeof INPUT | typeof OUTPUT, pinNo: number, pin: PinType, plugParams: PlugParams; }) =>
+    pin.type === "scalar" || pin.plug === false
+        ? null
+        : <Plug
+            id={genPlugId(nodeNo, io, pinNo, pin.type)}
+            className={`${styles.plug} ${genShortTy(pin.type) === "b" ? styles.plugb : styles.plugc}`}
+            handlers={plugParams.handlers}
+            stateTuple={plugParams.stateTuple} />;
+
 const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "className" | "style">> & {
     index: number;
     state: NodeState;
-    plugHandlers: Parameters<typeof Plug>[0]["handlers"];
-    plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
+    plugParams: PlugParams;
     onChange: (target: { state: NodeState, nodeNo: number, inNo: number; }, value: string) => void;
     onRemove?: (target: number) => void;
     onLoadBuffer?: (index: number, state: { loading: true; } | { error: unknown; } | { buffer: ArrayBuffer; }) => void;
-}> = ({ className, style, index, state, plugHandlers, plugStateTuple, onChange, onRemove, onLoadBuffer }) => {
+}> = ({ className, style, index, state, plugParams, onChange, onRemove, onLoadBuffer }) => {
     const type = NodeTypes[state.type];
     const urlref = useRef<HTMLInputElement>(null);
     // XXX: we need to explicit type useDrop??
@@ -73,32 +86,28 @@ const SoundNode: FunctionComponent<Partial<Pick<HTMLAttributes<HTMLElement>, "cl
 
     return <div ref={state.type === "buffer" ? dropref : undefined} className={`${styles.base} ${state.invalid ? styles.error : ""} ${isOver ? styles.dropping : ""} ${className || ""}`} style={style}>
         <div className={styles.title}>{state.type}</div>
-        {type.inputs.map((pin, i) =>
-            <div key={i} className={`${styles.slot} ${styles.input}`}>
-                {pin.type === "scalar" || pin.plug === false ? null : <Plug id={genPlugId(index, INPUT, i, type.inputs[i].type)} className={`${styles.plug} ${genShortTy(type.inputs[i].type) === "b" ? styles.plugb : styles.plugc}`} handlers={plugHandlers} stateTuple={plugStateTuple} />}
+        {type.inputs.map((pin, pinNo) =>
+            <div key={pinNo} className={`${styles.slot} ${styles.input}`}>
+                <NodePlug nodeNo={index} io={INPUT} pinNo={pinNo} pin={pin} plugParams={plugParams} />
                 {pin.type === "channels" || pin.type === "buffer"
                     ? <ConnectSlot pin={pin} />
-                    : <ParamSlot pin={pin} value={state.inputs[i].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: i }, v)} />}
+                    : <ParamSlot pin={pin} value={state.inputs[pinNo].value || ""} onChange={v => onChange({ state, nodeNo: index, inNo: pinNo }, v)} />}
             </div>)}
         {state.type !== "buffer" ? null :
             <>
-                <div style={{ padding: "5px 5px" }}>
+                <div style={{ margin: "5px 5px" }}>
                     <input ref={urlref} style={{ width: "8em" }} type="text" placeholder="URL..." />
-                    <button onClick={() => loadWrapper(index, onLoadBuffer, async () => await (await fetch(urlref.current!.value)).arrayBuffer())}>Load</button>
+                    <button onClick={e => loadWrapper(index, onLoadBuffer, async () => await (await fetch(urlref.current!.value)).arrayBuffer()) /* free-run async */}>Load</button>
                 </div>
-                <div style={{ padding: "5px 5px" }}>
+                <div style={{ margin: "5px 5px" }}>
                     {!state.abuffer ? "empty" : <>{state.abuffer.duration.toFixed(2)} sec ({sibytes(state.bbuffer!.byteLength)})</>}
                 </div>
             </>}
-        {!state.lasterror ? null : <div style={{ padding: "5px 5px", color: "red" }}>
-            {state.lasterror}
-        </div>}
-        {type.outputs.map((pin, i) =>
-            <div key={i} className={`${styles.slot} ${styles.output}`}>
-                <div className={styles.label}>
-                    {pin.name}
-                </div>
-                <Plug id={genPlugId(index, OUTPUT, i, type.outputs[i].type)} className={`${styles.plug} ${genShortTy(type.outputs[i].type) === "b" ? styles.plugb : styles.plugc}`} handlers={plugHandlers} stateTuple={plugStateTuple} />
+        {!state.lasterror ? null : <div style={{ padding: "5px 5px", color: "red" }}>{state.lasterror}</div>}
+        {type.outputs.map((pin, pinNo) =>
+            <div key={pinNo} className={`${styles.slot} ${styles.output}`}>
+                <ConnectSlot pin={pin} />
+                <NodePlug nodeNo={index} io={OUTPUT} pinNo={pinNo} pin={pin} plugParams={plugParams} />
             </div>)}
         {onRemove && state.type !== "output" && <div className={styles.remove} onClick={e => onRemove(index)}></div>}
     </div >;

@@ -3,16 +3,13 @@ import { FunctionComponent, PropsWithChildren, useEffect } from "react";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import Draggable from "./dragable";
-import Node from "./node";
-import Plug from "./plug";
 import SoundNode from "./sndnode";
 import { NodeState } from "./state";
 
 const InstNode: FunctionComponent<{
     index: number;
     state: NodeState;
-    plugHandlers: Parameters<typeof Plug>[0]["handlers"];
-    plugStateTuple: Parameters<typeof Plug>[0]["stateTuple"];
+    plugParams: Parameters<typeof SoundNode>[0]["plugParams"];
     x: number;
     y: number;
     dragstart?: Parameters<typeof Draggable>[0]["dragstart"];
@@ -20,7 +17,7 @@ const InstNode: FunctionComponent<{
     onChange: Parameters<typeof SoundNode>[0]["onChange"];
     onRemove: Parameters<typeof SoundNode>[0]["onRemove"];
     onLoadBuffer?: Parameters<typeof SoundNode>[0]["onLoadBuffer"];
-}> = ({ index, state, plugHandlers, plugStateTuple, x, y, dragstart, dragend, onChange, onRemove, onLoadBuffer }) => {
+}> = ({ index, state, plugParams, x, y, dragstart, dragend, onChange, onRemove, onLoadBuffer }) => {
     // const [{ isDragging, offset }, dragref, preview] = useDrag({
     //     type: "InstNode",
     //     options: { dropEffect: "move" },
@@ -50,8 +47,7 @@ const InstNode: FunctionComponent<{
             <SoundNode
                 index={index}
                 state={state}
-                plugHandlers={plugHandlers}
-                plugStateTuple={plugStateTuple}
+                plugParams={plugParams}
                 onChange={onChange}
                 onRemove={onRemove}
                 onLoadBuffer={onLoadBuffer} />
